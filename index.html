@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 7</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 9</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -78,6 +78,9 @@ footer{color:rgba(251,247,237,.55);text-align:center;font-size:11px;margin-top:1
 .req{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.req:last-child{border-bottom:none}
 .req input{margin-top:3px;width:16px;height:16px}.req.done .req-text{text-decoration:line-through;color:var(--faint)}
 .req-text{font-size:13px;line-height:1.4}.req-note{font-size:11px;color:var(--muted);margin-top:3px}
+.cal-add-btn{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px;margin-top:5px}
+.cal-item-row{border:1px solid var(--line);border-radius:8px;padding:9px;margin-top:8px;background:var(--paper)}
+
 
 </style>
 </head>
@@ -85,7 +88,7 @@ footer{color:rgba(251,247,237,.55);text-align:center;font-size:11px;margin-top:1
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 7 · Per Scholas + CodePath Web Development + SMC · uploads + speech-to-text + funding</footer>
+<footer>Draft 9 · direct calendar entry + two-way To Do sync + iPhone Calendar reminders</footer>
 </div>
 
 <script>
@@ -96,7 +99,7 @@ smc_cs4:{program:'SMC',title:'CS 4',section:'1722',prof:'T. Seno',dates:'Sep 21�
 smc_py:{program:'SMC',title:'CS 87A — Python',section:'1764',prof:'J. Darwiche',dates:'Sep 21–Dec 11',hours:'4.5 hrs/week arranged',color:C.python},
 smc_cs3:{program:'SMC',title:'CS 3',section:'1717',prof:'Nathan Greenfield',dates:'Oct 26–Dec 18',hours:'6.5 hrs/week arranged',color:C.cs3},
 cp_web:{program:'CodePath',title:'Intro to Web Development',section:'',prof:'',dates:'Starts Sep 16',hours:'Live Wed 3–5 PM PT + projects',color:C.web},
-ps:{program:'Per Scholas',title:'Cybersecurity Training',section:'',prof:'',dates:'Admission pending',hours:'Mon–Fri 9 AM–4 PM if accepted',color:C.ps}
+ps:{program:'Per Scholas',title:'Cybersecurity with AI Tools',section:'',prof:'',dates:'Next LA cohort starts Nov 30, 2026 · admission pending',hours:'Remote · Mon–Fri 9 AM–4 PM · 15 weeks if accepted',color:C.ps}
 };
 
 let state;try{state=JSON.parse(localStorage.getItem('india-dashboard-d3')||'{}')}catch(e){state={}}
@@ -105,6 +108,13 @@ state.month=state.month||'2026-09';state.courses=state.courses||{};state.todos=s
 state.requirements=state.requirements||{};
 state.requirements.aauw=state.requirements.aauw||{};
 state.requirements.codepath=state.requirements.codepath||{};
+state.programDates=state.programDates||{};
+state.programDates.ps=Object.assign({start:'2026-11-30',weeks:15,status:'Pending acceptance'},state.programDates.ps||{});
+state.programDates.cp_web=Object.assign({start:'2026-09-16',end:'',status:'Accepted'},state.programDates.cp_web||{});
+state.programDates.smc_cs4=Object.assign({start:'2026-09-21',end:'2026-12-11'},state.programDates.smc_cs4||{});
+state.programDates.smc_py=Object.assign({start:'2026-09-21',end:'2026-12-11'},state.programDates.smc_py||{});
+state.programDates.smc_cs3=Object.assign({start:'2026-10-26',end:'2026-12-18'},state.programDates.smc_cs3||{});
+state.calendarEvents=state.calendarEvents||[];
 for(const [id,s] of Object.entries(COURSE_SEED)){
  if(!state.courses[id])state.courses[id]={};
  state.courses[id]=Object.assign({prof:s.prof||'',email:'',officeHours:'',officeLocation:'',labHours:'',labLocation:'',tutoring:'',canvas:'',syllabus:'',concepts:'',keywords:'',takeaways:'',questions:'',assignments:'',notes:''},state.courses[id]);
@@ -148,6 +158,15 @@ if(!state.seededDraft6){
  state.seededDraft6=true;
  save();
 }
+if(!state.seededDraft8){
+ const addTodo8=(title,due='',course='ps',priority='High')=>{
+   if(!state.todos.some(t=>t.title===title)) state.todos.push({id:Date.now()+Math.random(),title,due,course,priority,done:false});
+ };
+ addTodo8('Per Scholas — schedule admissions interview');
+ addTodo8('Per Scholas — complete required pre-course work');
+ state.seededDraft8=true;
+ save();
+}
 
 function save(){localStorage.setItem('india-dashboard-d3',JSON.stringify(state))}
 function esc(v=''){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
@@ -156,23 +175,175 @@ function renderTabs(){tabs.innerHTML=TABS.map(t=>`<button class="tab ${state.tab
 function setTab(x){state.tab=x;save();renderTabs();render()}
 function subtabs(items,current,setter){return `<div class="subtabs">${items.map(x=>`<button class="subtab ${current===x[0]?'active':''}" onclick="${setter}('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 
+
+function setProgramDate(id,key,val){
+ state.programDates[id]=state.programDates[id]||{};
+ state.programDates[id][key]=val; save(); render();
+}
+function ymdLocal(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function addDaysYmd(ymd,days){const d=new Date(ymd+'T12:00:00');d.setDate(d.getDate()+days);return ymdLocal(d)}
+function psEndDate(){
+ const p=state.programDates.ps||{};
+ if(!p.start)return '';
+ const weeks=Math.max(1,Number(p.weeks)||15);
+ return addDaysYmd(p.start,weeks*7-1);
+}
+function taskColor(course){
+ const colors={ps:'#2E7D5B',cp_web:'#7A4EA3',smc_py:'#4F74B7',smc_cs4:'#B5522F',smc_cs3:'#8A6B2E',general:'#A6373B'};
+ return colors[course]||'#A6373B';
+}
+function taskLabel(t){return `${t.done?'✓ ':''}${t.title}`}
+function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
+
+
+function addCalendarEvent(){
+ const title=(document.getElementById('ce-title')||{}).value?.trim();
+ const date=(document.getElementById('ce-date')||{}).value;
+ const time=(document.getElementById('ce-time')||{}).value||'';
+ const category=(document.getElementById('ce-category')||{}).value||'general';
+ const type=(document.getElementById('ce-type')||{}).value||'Appointment';
+ const reminder=(document.getElementById('ce-reminder')||{}).value||'none';
+ const notes=(document.getElementById('ce-notes')||{}).value?.trim()||'';
+ const makeTodo=(document.getElementById('ce-todo')||{}).checked;
+ if(!title||!date)return alert('Enter a title and date.');
+ const id=Date.now();
+ state.calendarEvents.push({id,title,date,time,category,type,reminder,notes,done:false});
+ if(makeTodo){
+   state.todos.push({id:id+1,title,due:date,course:category,priority:'Medium',done:false,calendarEventId:id});
+ }
+ save();render();
+}
+function deleteCalendarEvent(id){
+ state.calendarEvents=state.calendarEvents.filter(e=>e.id!=id);
+ state.todos=state.todos.filter(t=>t.calendarEventId!=id);
+ save();render();
+}
+function toggleCalendarEvent(id){
+ const e=state.calendarEvents.find(x=>x.id==id);if(e)e.done=!e.done;
+ const t=state.todos.find(x=>x.calendarEventId==id);if(t)t.done=e?.done||false;
+ save();render();
+}
+function editCalendarEvent(id,key,val){
+ const e=state.calendarEvents.find(x=>x.id==id);if(!e)return;e[key]=val;
+ const t=state.todos.find(x=>x.calendarEventId==id);
+ if(t){if(key==='title')t.title=val;if(key==='date')t.due=val;if(key==='category')t.course=val;}
+ save();render();
+}
+function directEventsForDate(ymd){
+ return state.calendarEvents.filter(e=>e.date===ymd).map(e=>({n:`${e.time?e.time+' ':''}${e.done?'✓ ':''}${e.title}`,c:e.done?'#6E6255':taskColor(e.category)}));
+}
+function icsEscape(s){return String(s||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;')}
+function reminderTrigger(v){
+ return {m10:'-PT10M',m30:'-PT30M',h1:'-PT1H',d1:'-P1D'}[v]||'';
+}
+function dtLocal(date,time){
+ const t=(time||'09:00').replace(':','')+'00';
+ return date.replaceAll('-','')+'T'+t;
+}
+function downloadICS(e){
+ const start=dtLocal(e.date,e.time||'09:00');
+ const d=new Date(e.date+'T'+(e.time||'09:00')+':00');
+ d.setHours(d.getHours()+1);
+ const end=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}00`;
+ const trig=reminderTrigger(e.reminder);
+ const alarm=trig?`BEGIN:VALARM\nTRIGGER:${trig}\nACTION:DISPLAY\nDESCRIPTION:${icsEscape(e.title)}\nEND:VALARM\n`:'';
+ const ics=`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//India Learning Dashboard//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:${e.id}@india-learning-dashboard
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z/,'Z')}
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${icsEscape(e.title)}
+DESCRIPTION:${icsEscape(e.notes)}
+${alarm}END:VEVENT
+END:VCALENDAR`;
+ const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(e.title||'calendar-event').replace(/[^\w-]+/g,'_')+'.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportAllCalendarICS(){
+ if(!state.calendarEvents.length)return alert('No direct calendar events to export yet.');
+ let body='';
+ for(const e of state.calendarEvents){
+   const start=dtLocal(e.date,e.time||'09:00');
+   const d=new Date(e.date+'T'+(e.time||'09:00')+':00');d.setHours(d.getHours()+1);
+   const end=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}T${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}00`;
+   const trig=reminderTrigger(e.reminder);
+   const alarm=trig?`BEGIN:VALARM\nTRIGGER:${trig}\nACTION:DISPLAY\nDESCRIPTION:${icsEscape(e.title)}\nEND:VALARM\n`:'';
+   body+=`BEGIN:VEVENT
+UID:${e.id}@india-learning-dashboard
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z/,'Z')}
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${icsEscape(e.title)}
+DESCRIPTION:${icsEscape(e.notes)}
+${alarm}END:VEVENT
+`;
+ }
+ const ics=`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//India Learning Dashboard//EN
+CALSCALE:GREGORIAN
+${body}END:VCALENDAR`;
+ const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='India_Learning_Dashboard_Calendar.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function home(){
  const todoOpen=state.todos.filter(x=>!x.done).length;
  return `<div class="panel-title">This Week at a Glance</div><div class="panel-sub">A single control center for classes, sequential schedule, assignments, learning notes, funding, and reminders.</div>
  <div class="stat-row"><div class="stat"><div class="num">3</div><div class="lab">SMC courses</div></div><div class="stat"><div class="num">1</div><div class="lab">CodePath course</div></div><div class="stat"><div class="num">${todoOpen}</div><div class="lab">Open to-do items</div></div><div class="stat"><div class="num">1 hr</div><div class="lab">Wednesday overlap</div></div></div>
- <div class="alert"><b>Known Wednesday conflict</b>If accepted to Per Scholas, Wednesday 3–4 PM overlaps with CodePath Web Development. Ask for the Wednesday-only 3 PM departure after acceptance and before committing.</div>
- <div class="alert green"><b>New in Draft 3</b>Monthly calendar, separate to-do list, one Interactive Learning workspace per class/program, Funding with Grants/Loans/Scholarships/Fellowships, and expanded learning-note fields inside every course.</div>`;
+ <div class="alert green"><b>Per Scholas timing updated</b>The current Los Angeles Cybersecurity with AI Tools cohort is scheduled to start November 30, 2026. Until then, use the To Do list for admissions interview and pre-course-work actions.</div>
+ <div class="alert green"><b>Editable dashboard</b>Tasks with due dates now appear automatically on both calendar views. Program dates can be changed directly in MY MASTER SCHEDULE without editing GitHub.</div>`;
 }
 
 function setScheduleSub(x){state.scheduleSub=x;save();render()}
 function schedule(){
  const subs=subtabs([['weekly','Daily / Weekly Master Schedule'],['monthly','Monthly Schedule'],['synopsis','Calendar Synopsis']],state.scheduleSub,'setScheduleSub');
  return `<div class="panel-title">MY MASTER SCHEDULE</div>
- <div class="panel-sub">Your non-negotiable daily rhythm: early personal time, focused morning study, workout, Per Scholas weekdays if accepted, afternoon/evening review, and protected sleep. Sunday is fully off.</div>
+ <div class="panel-sub">Your non-negotiable daily rhythm plus editable program dates. Per Scholas does not enter the weekday calendar until its saved start date. Sunday remains fully off from study.</div>
  ${subs}${state.scheduleSub==='weekly'?weekly():state.scheduleSub==='monthly'?monthly():calendarSynopsis()}`;
 }
 function weekly(){
+ const ps=state.programDates.ps||{}, cp=state.programDates.cp_web||{};
  return `
+ <div class="card" style="--tone:${C.ps}">
+   <h3>Editable Program Dates</h3>
+   <div class="small" style="margin-bottom:10px">Change these here whenever dates change. The calendar updates immediately in this browser — no GitHub upload needed for date changes.</div>
+   <div class="inline3">
+     <div class="field"><label>Per Scholas Start</label><input type="date" value="${esc(ps.start||'')}" onchange="setProgramDate('ps','start',this.value)"></div>
+     <div class="field"><label>Length (weeks)</label><input type="number" min="1" value="${esc(ps.weeks||15)}" onchange="setProgramDate('ps','weeks',this.value)"></div>
+     <div class="field"><label>Status</label><select onchange="setProgramDate('ps','status',this.value)"><option ${ps.status==='Pending acceptance'?'selected':''}>Pending acceptance</option><option ${ps.status==='Accepted'?'selected':''}>Accepted</option><option ${ps.status==='Waitlisted'?'selected':''}>Waitlisted</option><option ${ps.status==='Completed'?'selected':''}>Completed</option></select></div>
+   </div>
+   <div class="meta">Current saved Per Scholas window: ${ps.start||'not set'}${ps.start?' through '+psEndDate():''} · Mon–Fri 9 AM–4 PM · Remote · 15 weeks unless you change it.</div>
+ </div>
+ <div class="card" style="--tone:${C.deadline}">
+   <h3>Add Directly to Calendar</h3>
+   <div class="small" style="margin-bottom:9px">Create an appointment, class, study block, personal event, or task here. You can optionally create a matching To Do automatically.</div>
+   <div class="inline3">
+     <div class="field"><label>Title</label><input id="ce-title"></div>
+     <div class="field"><label>Date</label><input id="ce-date" type="date"></div>
+     <div class="field"><label>Time</label><input id="ce-time" type="time"></div>
+   </div>
+   <div class="inline3">
+     <div class="field"><label>Type</label><select id="ce-type"><option>Appointment</option><option>Task</option><option>Assignment</option><option>Class</option><option>Study</option><option>Personal</option></select></div>
+     <div class="field"><label>Category</label><select id="ce-category">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title}</option>`).join('')}<option value="general">General</option></select></div>
+     <div class="field"><label>Phone Reminder</label><select id="ce-reminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div>
+   </div>
+   <div class="field"><label>Notes</label><textarea id="ce-notes" rows="2"></textarea></div>
+   <label style="display:flex;gap:8px;align-items:center;font-size:12px"><input id="ce-todo" type="checkbox"> Also create a matching To Do item</label>
+   <div class="btnrow"><button class="btn" onclick="addCalendarEvent()">Add to calendar</button><button class="btn ghost" onclick="exportAllCalendarICS()">Export all direct events to iPhone Calendar (.ics)</button></div>
+   <div class="feedback"><strong>Phone notifications without cloud:</strong> choose a reminder, then use the .ics export and add the event to Apple Calendar. Your iPhone Calendar handles the notification even when this dashboard is closed.</div>
+ </div>
+
+ ${state.calendarEvents.length?`<div class="card"><h3>My Direct Calendar Items</h3>${[...state.calendarEvents].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(e=>`<div class="cal-item-row">
+ <div class="inline3"><div class="field"><label>Title</label><input value="${esc(e.title)}" onchange="editCalendarEvent(${e.id},'title',this.value)"></div><div class="field"><label>Date</label><input type="date" value="${e.date}" onchange="editCalendarEvent(${e.id},'date',this.value)"></div><div class="field"><label>Time</label><input type="time" value="${e.time||''}" onchange="editCalendarEvent(${e.id},'time',this.value)"></div></div>
+ <div class="small">${e.type} · ${e.category} · Reminder: ${e.reminder}</div>
+ <div class="btnrow"><button class="btn ghost" onclick="toggleCalendarEvent(${e.id})">${e.done?'Mark open':'Mark complete'}</button><button class="btn ghost" onclick="downloadICS(state.calendarEvents.find(x=>x.id==${e.id}))">Add to iPhone Calendar</button><button class="btn ghost" onclick="deleteCalendarEvent(${e.id})">Delete</button></div>
+ </div>`).join('')}</div>`:''}
+
  <div class="alert green"><b>Sleep + recovery anchor</b>Bedtime is 7:00–7:30 PM. Wake time is 12:00 AM. Sunday is a complete day off — no studying, no catch-up, no negotiations.</div>
  <div class="card" style="--tone:${C.study}">
    <h3>Daily Time Blocks · Monday–Saturday</h3>
@@ -182,7 +353,7 @@ function weekly(){
        <tr><td><b>12:00–3:45 AM</b></td><td>Personal Time</td><td>Food prep, laundry, personal admin, household needs, quiet time — whatever you need for you.</td></tr>
        <tr><td><b>3:45–6:45 AM</b></td><td>Primary Study Block</td><td>Protected 3-hour focus session. SMC rotation or all-course study depending on the day.</td></tr>
        <tr><td><b>7:00–8:30 AM</b></td><td>Workout</td><td>1–1.5 hour exercise / movement block.</td></tr>
-       <tr><td><b>9:00 AM–4:00 PM</b></td><td>Per Scholas</td><td>Monday–Friday if accepted. Wednesday may require a 3:00 PM departure for CodePath.</td></tr>
+       <tr><td><b>9:00 AM–4:00 PM</b></td><td>Per Scholas</td><td>Monday–Friday only during the saved Per Scholas cohort window, if accepted.</td></tr>
        <tr><td><b>4:00–5:30/6:00 PM</b></td><td>Review / Study</td><td>Used on designated all-course days and for short review, assignments, or reinforcement when needed.</td></tr>
        <tr><td><b>6:30 PM</b></td><td>Wind Down</td><td>Close school/work, prepare for sleep, no heavy studying.</td></tr>
        <tr><td><b>7:00–7:30 PM</b></td><td>Bed</td><td>Protected bedtime.</td></tr>
@@ -195,11 +366,11 @@ function weekly(){
    <table>
      <thead><tr><th>Day</th><th>3:45–6:45 AM</th><th>9 AM–4 PM</th><th>4:00–5:30/6 PM</th></tr></thead>
      <tbody>
-       <tr><td><b>Monday</b></td><td><span class="pill info">SMC</span> CS 87A — Python</td><td>Per Scholas if accepted</td><td>Light review / assignments only if needed</td></tr>
-       <tr><td><b>Tuesday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas if accepted</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
-       <tr><td><b>Wednesday</b></td><td><span class="pill info">SMC</span> CS 4</td><td>Per Scholas if accepted; proposed 3 PM departure</td><td><span class="pill conflict">3–5 PM</span> CodePath Web Development</td></tr>
-       <tr><td><b>Thursday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas if accepted</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
-       <tr><td><b>Friday</b></td><td><span class="pill info">SMC</span> CS 3</td><td>Per Scholas if accepted</td><td>Light weekly review / closeout</td></tr>
+       <tr><td><b>Monday</b></td><td><span class="pill info">SMC</span> CS 87A — Python</td><td>Per Scholas during cohort window</td><td>Light review / assignments only if needed</td></tr>
+       <tr><td><b>Tuesday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas during cohort window</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
+       <tr><td><b>Wednesday</b></td><td><span class="pill info">SMC</span> CS 4</td><td>Per Scholas during cohort window</td><td><span class="pill conflict">3–5 PM</span> CodePath Web Development</td></tr>
+       <tr><td><b>Thursday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas during cohort window</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
+       <tr><td><b>Friday</b></td><td><span class="pill info">SMC</span> CS 3</td><td>Per Scholas during cohort window</td><td>Light weekly review / closeout</td></tr>
        <tr><td><b>Saturday</b></td><td><span class="pill ok">ALL COURSES</span> Deep study / catch-up / projects</td><td>Open personal time after workout</td><td>Optional light review only — no forced evening session</td></tr>
        <tr><td><b>Sunday</b></td><td colspan="3"><span class="pill conflict">DAY OFF</span> No school. No study. No catch-up. No negotiations.</td></tr>
      </tbody>
@@ -207,7 +378,7 @@ function weekly(){
  </div>
 
  <div class="alert amber"><b>CS 3 timing note</b>CS 3 does not begin until October 26. Before then, Friday's SMC slot can rotate between Python, CS 4, or whichever course needs the most attention that week. Once CS 3 begins, Friday becomes its dedicated SMC block.</div>
- <div class="alert"><b>Wednesday exception</b>CodePath Web Development runs 3:00–5:00 PM. If Per Scholas accepts you, the only recurring overlap is 3:00–4:00 PM Wednesday. The plan is to ask about leaving Per Scholas at 3:00 PM on Wednesdays after acceptance and before formally committing.</div>`;
+ <div class="alert green"><b>No current CodePath conflict</b>CodePath Web Development begins in September, while the saved Per Scholas cohort begins November 30. The calendar will only show Per Scholas from its saved start date forward.</div>`;
 }
 
 function calendarSynopsis(){
@@ -231,8 +402,9 @@ function calendarSynopsis(){
    if(dow===5) ev.push({n:(ymd>='2026-10-26'?'CS 3 AM':'SMC Flex AM'),c:'#8A6B2E'});
    if(dow===6) ev.push({n:'All Courses Deep Study',c:'#2E7D5B'});
 
-   // Per Scholas weekdays
-   if(dow>=1&&dow<=5) ev.push({n:'Per Scholas 9–4',c:'#2E7D5B'});
+   // Per Scholas weekdays only inside editable cohort window
+   const psStart=(state.programDates.ps||{}).start, psEnd=psEndDate();
+   if(psStart && ymd>=psStart && (!psEnd || ymd<=psEnd) && dow>=1&&dow<=5) ev.push({n:'Per Scholas 9–4',c:'#2E7D5B'});
 
    // CodePath Wednesdays
    if(dow===3 && ymd>='2026-09-16') ev.push({n:'CodePath Web 3–5',c:'#7A4EA3'});
@@ -243,9 +415,12 @@ function calendarSynopsis(){
    if(ymd==='2026-10-26') ev.push({n:'CS 3 Starts',c:'#8A6B2E'});
    if(ymd==='2026-12-11'){ev.push({n:'CS 4 Ends',c:'#B5522F'});ev.push({n:'Python Ends',c:'#4F74B7'})}
    if(ymd==='2026-12-18') ev.push({n:'CS 3 Ends',c:'#8A6B2E'});
+   if((state.programDates.ps||{}).start===ymd) ev.push({n:'Per Scholas Starts',c:'#2E7D5B'});
 
-   // User reminders
+   // User reminders + To Do due dates
    state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({n:'Reminder: '+r.title,c:'#A6373B'}));
+   state.todos.filter(t=>t.due===ymd).forEach(t=>ev.push({n:'To Do: '+taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}));
+   ev.push(...directEventsForDate(ymd));
    return ev;
  };
 
@@ -260,7 +435,7 @@ function calendarSynopsis(){
    <span><i class="sw" style="background:#4F74B7"></i>Python</span>
    <span><i class="sw" style="background:#B5522F"></i>CS 4</span>
    <span><i class="sw" style="background:#8A6B2E"></i>CS 3 / SMC Flex</span>
-   <span><i class="sw" style="background:#A6373B"></i>Day Off / Reminder</span>
+   <span><i class="sw" style="background:#A6373B"></i>Day Off / Reminder / General task</span>
  </div>
  <div class="cal">
    ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="dow">${x}</div>`).join('')}
@@ -273,7 +448,7 @@ function calendarSynopsis(){
       </div>`;
    }).join('')}
  </div>
- <div class="small" style="margin-top:10px">This synopsis intentionally hides your repeating midnight personal block, workout, wind-down, and bedtime so the month stays readable. The detailed Monthly Schedule tab still shows the full daily sequence.</div>`;
+ <div class="small" style="margin-top:10px">This synopsis hides routine personal blocks so the month stays readable. Any dated To Do or direct calendar item appears here automatically. Direct calendar items can also be exported to Apple Calendar with an alert for iPhone notifications.</div>`;
 }
 function monthEvents(dateStr){
  const d=new Date(dateStr+'T12:00:00'), dow=d.getDay(), ev=[], ymd=dateStr;
@@ -281,6 +456,10 @@ function monthEvents(dateStr){
  // Sunday is protected OFF
  if(dow===0){
    ev.push({t:'ALL DAY',n:'DAY OFF — no study / no catch-up',c:'#A6373B'});
+   state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({t:'Reminder',n:r.title,c:'#A6373B'}));
+   ev.push(...dueTasks(ymd));
+ state.calendarEvents.filter(e=>e.date===ymd).forEach(e=>ev.push({t:e.time||'Flexible',n:(e.done?'✓ ':'')+e.title,c:e.done?'#6E6255':taskColor(e.category)}));
+   state.calendarEvents.filter(e=>e.date===ymd).forEach(e=>ev.push({t:e.time||'Flexible',n:(e.done?'✓ ':'')+e.title,c:e.done?'#6E6255':taskColor(e.category)}));
    return ev;
  }
 
@@ -297,8 +476,9 @@ function monthEvents(dateStr){
  if(dow===5) ev.push({t:'3:45 AM',n:(ymd>='2026-10-26'?'SMC CS 3':'SMC flex rotation until CS 3 begins'),c:'#8A6B2E'});
  if(dow===6) ev.push({t:'3:45 AM',n:'ALL COURSES — deep study / catch-up',c:'#2E7D5B'});
 
- // Per Scholas projected weekdays
- if(dow>=1&&dow<=5) ev.push({t:'9:00 AM',n:'Per Scholas — if accepted',c:'#2E7D5B'});
+ // Per Scholas weekdays only during editable cohort window
+ const psStart=(state.programDates.ps||{}).start, psEnd=psEndDate();
+ if(psStart && ymd>=psStart && (!psEnd || ymd<=psEnd) && dow>=1&&dow<=5) ev.push({t:'9:00 AM',n:'Per Scholas — '+((state.programDates.ps||{}).status||'Pending'),c:'#2E7D5B'});
 
  // Evening review structure
  if(dow===2||dow===4) ev.push({t:'4:00 PM',n:'ALL COURSES — review / assignments',c:'#B87F1F'});
@@ -315,11 +495,13 @@ function monthEvents(dateStr){
  if(ymd==='2026-10-26') ev.push({t:'Flexible',n:'SMC CS 3 begins',c:'#8A6B2E'});
  if(ymd==='2026-12-11'){ev.push({t:'Flexible',n:'CS 4 ends',c:'#B5522F'});ev.push({t:'Flexible',n:'CS 87A ends',c:'#4F74B7'})}
  if(ymd==='2026-12-18') ev.push({t:'Flexible',n:'CS 3 ends',c:'#8A6B2E'});
+ if((state.programDates.ps||{}).start===ymd) ev.push({t:'9:00 AM',n:'Per Scholas cohort begins',c:'#2E7D5B'});
 
- // User-added reminders
+ // User-added reminders + To Do due dates
  state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({t:'Reminder',n:r.title,c:'#A6373B'}));
+ ev.push(...dueTasks(ymd));
 
- const rank=t=>({'12:00 AM':1,'3:45 AM':2,'7:00 AM':3,'9:00 AM':4,'12:00 PM':5,'3:00 PM':6,'4:00 PM':7,'6:30 PM':8,'7:00 PM':9,'Flexible':10,'Reminder':11}[t]||99);
+ const rank=t=>({'12:00 AM':1,'3:45 AM':2,'7:00 AM':3,'9:00 AM':4,'12:00 PM':5,'3:00 PM':6,'4:00 PM':7,'6:30 PM':8,'7:00 PM':9,'Flexible':10,'DUE':11,'Reminder':12}[t]||99);
  return ev.sort((a,b)=>rank(a.t)-rank(b.t));
 }
 function changeMonth(delta){
@@ -337,13 +519,14 @@ function monthly(){
  <div class="cal">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="dow">${x}</div>`).join('')}
  ${cells.map(x=>{const ds=`${x.d.getFullYear()}-${String(x.d.getMonth()+1).padStart(2,'0')}-${String(x.d.getDate()).padStart(2,'0')}`,ev=monthEvents(ds);
  return `<div class="daycell ${x.muted?'muted':''}"><div class="date">${x.d.getDate()}</div>${ev.map(e=>`<div class="event" style="background:${e.c}"><small>${e.t}</small>${esc(e.n)}</div>`).join('')}</div>`}).join('')}</div>
- <div class="small" style="margin-top:10px">Each day is displayed in sequential order by time. The month view now follows your master daily rhythm, your SMC study rotation, projected Per Scholas weekdays, CodePath Wednesday class, wind-down time, bedtime, and protected Sundays off.</div>`;
+ <div class="small" style="margin-top:10px">Each day is displayed in sequential order by time. The month view now follows your master daily rhythm, your SMC study rotation, Per Scholas only during its saved cohort window, CodePath Wednesday class, wind-down time, bedtime, and protected Sundays off.</div>`;
 }
 
 function setCourse(id,key,val){state.courses[id][key]=val;save()}
 function courseCard(id){
  const s=COURSE_SEED[id],c=state.courses[id];
- return `<div class="card" style="--tone:${s.color}"><h3>${s.title}</h3><div class="meta"><b>${s.program}</b>${s.section?` · Section ${s.section}`:''}<br>${s.dates}<br>${s.hours}</div>
+ const dynamicDates=id==='ps' ? `Starts ${(state.programDates.ps||{}).start||'not set'} · ${(state.programDates.ps||{}).status||'Pending'}` : s.dates;
+ return `<div class="card" style="--tone:${s.color}"><h3>${s.title}</h3><div class="meta"><b>${s.program}</b>${s.section?` · Section ${s.section}`:''}<br>${dynamicDates}<br>${s.hours}</div>
  <div class="inline2"><div class="field"><label>Professor / Instructor</label><input value="${esc(c.prof)}" oninput="setCourse('${id}','prof',this.value)"></div><div class="field"><label>Email</label><input value="${esc(c.email)}" oninput="setCourse('${id}','email',this.value)"></div></div>
  <div class="inline2"><div class="field"><label>Office Hours</label><input value="${esc(c.officeHours)}" oninput="setCourse('${id}','officeHours',this.value)"></div><div class="field"><label>Office / Zoom Location</label><input value="${esc(c.officeLocation)}" oninput="setCourse('${id}','officeLocation',this.value)"></div></div>
  <div class="inline2"><div class="field"><label>Lab Hours</label><input value="${esc(c.labHours)}" oninput="setCourse('${id}','labHours',this.value)"></div><div class="field"><label>Lab Location / Link</label><input value="${esc(c.labLocation)}" oninput="setCourse('${id}','labLocation',this.value)"></div></div>
@@ -366,13 +549,24 @@ function addTodo(){
 }
 function toggleTodo(id){let x=state.todos.find(t=>t.id==id);if(x)x.done=!x.done;save();render()}
 function delTodo(id){state.todos=state.todos.filter(t=>t.id!=id);save();render()}
+function editTodo(id,key,val){let x=state.todos.find(t=>t.id==id);if(x){x[key]=val;save();render()}}
 function todo(){
  const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999')));
- return `<div class="panel-title">To-Do List</div><div class="panel-sub">Separate from reminders: this is your working task list for assignments, study actions, emails, applications, and follow-ups.</div>
- <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3><div class="inline2"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date</label><input id="tddue" type="date"></div></div>
+ return `<div class="panel-title">To-Do List</div><div class="panel-sub">Working tasks for assignments, study actions, applications, interviews, and follow-ups. <b>Give a task a due date and it automatically appears on both calendar views.</b></div>
+ <div class="alert green"><b>Automatic calendar sync is on</b>Add or edit a due date here → the task appears on that calendar date. Change the date → it moves. Delete the task → it disappears. Everything remains local to this browser/device.</div>
+ <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3><div class="inline2"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div></div>
  <div class="inline2"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
  <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div><button class="btn" onclick="addTodo()">Add task</button></div>
- <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div><div class="todo-title">${esc(t.title)}</div><div class="todo-meta">${t.course==='general'?'General':COURSE_SEED[t.course].title} · ${t.priority}${t.due?' · due '+t.due:''}</div><div class="todo-actions"><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div></div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
+ <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div style="flex:1">
+   <div class="field" style="margin-top:0"><label>Task</label><input value="${esc(t.title)}" onchange="editTodo(${t.id},'title',this.value)"></div>
+   <div class="inline3">
+     <div class="field"><label>Due Date → Calendar</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
+     <div class="field"><label>Class / Institution</label><select onchange="editTodo(${t.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${t.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${t.course==='general'?'selected':''}>General</option></select></div>
+     <div class="field"><label>Priority</label><select onchange="editTodo(${t.id},'priority',this.value)"><option ${t.priority==='High'?'selected':''}>High</option><option ${t.priority==='Medium'?'selected':''}>Medium</option><option ${t.priority==='Low'?'selected':''}>Low</option></select></div>
+   </div>
+   <div class="todo-meta">${t.due?'Calendar: '+t.due:'No calendar date yet'} · ${t.done?'Completed':'Open'}</div>
+   <div class="todo-actions"><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div>
+ </div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
 }
 
 

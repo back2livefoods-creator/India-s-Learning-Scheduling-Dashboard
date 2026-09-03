@@ -1,5 +1,3 @@
-# India's Fall 2026 Master Learning Dashboard
+# India's Learning & Master Schedule Dashboard
 
-GitHub Pages-ready static site.
-
-Main file: `index.html`
+Draft 9: direct calendar entry, optional Calendar → To Do creation, To Do → Calendar sync, editable program dates, and .ics export with Apple Calendar reminders. No cloud database.
