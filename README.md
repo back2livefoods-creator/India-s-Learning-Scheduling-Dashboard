@@ -1,3 +1,3 @@
 # India's Learning & Master Schedule Dashboard
 
-Draft 18 makes timed To Dos true calendar blocks in the Monthly detailed time-gap view. To Dos now support Start Time and optional End Time; the block fills the corresponding time span. If End Time is omitted, a 30-minute block is used. Existing mobile, Notes, reminder, and calendar features are preserved.
+Draft 20 fixes Monthly Schedule synchronization. Timed To Dos are normalized and rendered as actual calendar blocks, and a new Add Time Block Directly to Monthly Calendar form lets the user place an item straight into an open date/time range. Direct blocks support start and end times and can optionally create a matching To Do. Existing local data remains intact when replacing index.html on the same GitHub Pages origin.

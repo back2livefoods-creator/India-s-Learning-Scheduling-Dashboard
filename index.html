@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 18</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 20</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -401,6 +401,12 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   }
 }
 
+
+/* Draft 20 monthly direct-entry improvements */
+@media(max-width:700px){
+  #mb-title,#mb-date,#mb-start,#mb-end,#mb-category{width:100%!important;max-width:100%!important;box-sizing:border-box}
+}
+
 </style>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -413,7 +419,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 18 · timed To Dos occupy monthly calendar slots</footer>
+<footer>Draft 20 · reliable Monthly time blocks + To Do sync</footer>
 </div>
 
 <script>
@@ -520,7 +526,7 @@ function taskColor(course){
  return colors[course]||'#A6373B';
 }
 function taskLabel(t){return `${t.done?'✓ ':''}${t.title}`}
-function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:t.time?(clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):'')):'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
+function dueTasks(ymd){return todosOnDate(ymd).map(t=>({t:t.time?(clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):'')):'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
 function clockLabel(v){if(!v)return '';const [h,m]=v.split(':').map(Number),ap=h>=12?'PM':'AM',hh=(h%12)||12;return `${hh}:${String(m).padStart(2,'0')} ${ap}`}
 function todoTimeRange(t){
  const start=parseClockToMinutes(t&&t.time);
@@ -528,6 +534,54 @@ function todoTimeRange(t){
  let end=parseClockToMinutes(t&&t.endTime);
  if(end==null||end<=start)end=start+30;
  return {start,end:Math.min(1170,end)};
+}
+
+function todoOccursOn(t,ymd){
+ const start=t.due||t.startDate||'';
+ if(!start)return false;
+ if(ymd<start)return false;
+ const end=t.endDate||start;
+ if(ymd>end)return false;
+ const repeat=t.repeat||'none';
+ if(repeat==='none') return ymd===start;
+ const d=new Date(ymd+'T12:00:00'),dow=d.getDay();
+ if(repeat==='weekdays') return dow>=1&&dow<=5;
+ if(repeat==='daily') return true;
+ return ymd===start;
+}
+function todosOnDate(ymd){return state.todos.filter(t=>todoOccursOn(t,ymd))}
+
+function normalizedTodoRange(t){
+  const startVal=t.time||t.startTime||t.start||'';
+  const endVal=t.endTime||t.finishTime||t.end||'';
+  const start=parseClockToMinutes(startVal);
+  if(start==null)return null;
+  let end=parseClockToMinutes(endVal);
+  if(end==null||end<=start)end=start+30;
+  return {start,end:Math.min(1170,end)};
+}
+function todoCalendarEvents(ymd){
+  return todosOnDate(ymd).map(t=>{
+    const tr=normalizedTodoRange(t);
+    return tr
+      ? {start:tr.start,end:tr.end,title:'TO DO — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}
+      : {allDay:true,title:'DUE — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)};
+  });
+}
+function addMonthlyBlock(){
+  const title=document.getElementById('mb-title').value.trim();
+  const date=document.getElementById('mb-date').value;
+  const start=document.getElementById('mb-start').value;
+  const end=document.getElementById('mb-end').value;
+  const category=document.getElementById('mb-category').value;
+  const makeTodo=document.getElementById('mb-todo').checked;
+  if(!title||!date||!start||!end)return alert('Enter title, date, start time, and end time.');
+  if(parseClockToMinutes(end)<=parseClockToMinutes(start))return alert('End time must be after start time.');
+  state.calendarEvents.push({id:Date.now(),title,date,time:start,endTime:end,category,done:false,reminder:'none',notes:'Added directly from Monthly Schedule'});
+  if(makeTodo){
+    state.todos.push({id:Date.now()+1,title,due:date,endDate:'',time:start,endTime:end,repeat:'none',reminder:'none',course:category,priority:'Medium',done:false});
+  }
+  save();render();
 }
 
 function todoICS(t){
@@ -666,9 +720,9 @@ function visualScheduleForDate(d){
  ev.push({start:1140,end:1170,title:'Bed',color:'#A78B75'});
  state.calendarEvents.filter(e=>e.date===ymd).forEach(e=>{
    const start=parseClockToMinutes(e.time);
-   ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:{start,end:Math.min(1170,start+60),title:e.title,color:taskColor(e.category)});
+   ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:{start,end:(parseClockToMinutes(e.endTime)>start?Math.min(1170,parseClockToMinutes(e.endTime)):Math.min(1170,start+60)),title:e.title,color:taskColor(e.category)});
  });
- state.todos.filter(t=>t.due===ymd).forEach(t=>{const tr=todoTimeRange(t);ev.push(!tr?{allDay:true,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:tr.start,end:tr.end,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
+ ev.push(...todoCalendarEvents(ymd));
  state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>{const s=parseClockToMinutes(r.time);ev.push(s==null?{allDay:true,title:'Reminder: '+r.title,color:'#A6373B'}:{start:s,end:Math.min(1170,s+30),title:'Reminder: '+r.title,color:'#A6373B'})});
  return ev;
 }
@@ -719,10 +773,10 @@ function trueDayEvents(d){
  state.calendarEvents.filter(e=>e.date===ymd).forEach(e=>{
    const start=parseClockToMinutes(e.time);
    ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:
-     {start:start,end:Math.min(1170,start+60),title:e.title,color:taskColor(e.category)});
+     {start:start,end:(parseClockToMinutes(e.endTime)>start?Math.min(1170,parseClockToMinutes(e.endTime)):Math.min(1170,start+60)),title:e.title,color:taskColor(e.category)});
  });
- state.todos.filter(t=>t.due===ymd).forEach(t=>{const tr=todoTimeRange(t);ev.push(!tr?{allDay:true,title:'DUE — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:tr.start,end:tr.end,title:'TO DO — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
- state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({allDay:true,title:'Reminder — '+r.title,color:'#A6373B'}));
+ ev.push(...todoCalendarEvents(ymd));
+ state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>{const s=parseClockToMinutes(r.time);ev.push(s==null?{allDay:true,title:'Reminder — '+r.title,color:'#A6373B'}:{start:s,end:Math.min(1170,s+30),title:'Reminder — '+r.title,color:'#A6373B'})});
  return ev;
 }
 function renderTrueDayColumn(d){
@@ -801,7 +855,7 @@ function plannerTodoSheet(){
    </table>
    <div class="mobile-todo-cards">${rows.length?rows.map(t=>`<div class="m-task ${t.done?'done':''}" style="border-left-color:${taskColor(t.course)}">
       <div class="m-task-top"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div class="m-task-title">${esc(t.title)}</div></div>
-      <div class="m-task-date">${t.due?'Due '+t.due:'No due date'}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${esc(t.priority||'Medium')} priority</div>
+      <div class="m-task-date">${t.due?'Due '+t.due+(t.endDate?' → '+t.endDate:''):'No due date'}${t.repeat&&t.repeat!=='none'?' · '+t.repeat:''}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${esc(t.priority||'Medium')} priority</div>
       <input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)">
    </div>`).join(''):'<div class="small">No open tasks yet.</div>'}</div>
    <div class="planner-actions"><button class="btn" onclick="goTab('todo')">Add / manage tasks</button></div>
@@ -1016,11 +1070,26 @@ function monthly(){
  return `<div class="panel-title">Monthly Schedule — September 2026</div>
  <div class="panel-sub">Planner overview on top, with your compact month, running To Do sheet, and notes. Your detailed true time-scale calendar stays directly underneath.</div>
  ${plannerTop()}
+ <div class="card" style="--tone:#358765">
+   <h3>Add Time Block Directly to Monthly Calendar</h3>
+   <div class="panel-sub">Use this when you want something placed directly into an OPEN time slot. It will immediately occupy the matching time range below.</div>
+   <div class="inline3">
+     <div class="field"><label>Title</label><input id="mb-title" placeholder="Per Scholas Pre-Course Study"></div>
+     <div class="field"><label>Date</label><input id="mb-date" type="date"></div>
+     <div class="field"><label>Category</label><select id="mb-category">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+   </div>
+   <div class="inline3">
+     <div class="field"><label>Start Time</label><input id="mb-start" type="time"></div>
+     <div class="field"><label>End Time</label><input id="mb-end" type="time"></div>
+     <div class="field"><label>Also add to running To Do list</label><label style="display:flex;gap:8px;align-items:center;margin-top:10px"><input id="mb-todo" type="checkbox"> Yes</label></div>
+   </div>
+   <button class="btn" onclick="addMonthlyBlock()">Add to Monthly Calendar</button>
+ </div>
  <div class="schedule-section-label">Detailed Time-Gap Calendar</div>
  <div class="panel-sub">The TIME rail is on the left. Each colored block sits at its actual time, and the vertical blank/dashed space between blocks is proportional to the real amount of free time.</div>
  <div class="alert green"><b>This is the gap view you asked for.</b>If you have six hours open, you will literally see a much larger open space than a 30-minute gap. You no longer have to mentally calculate availability from stacked cards.</div>
  <div class="true-month-wrap">${weeks.map((s,i)=>`<div style="margin-bottom:18px"><div class="small" style="font-weight:700;margin:0 0 5px">WEEK ${i+1}</div>${renderTrueWeek(s)}</div>`).join('')}</div>
- <div class="true-month-note">Visible time range: 12:00 AM–7:30 PM. Open periods of 30 minutes or more are outlined and labeled. Scroll horizontally on smaller screens.</div>`;
+ <div class="true-month-note">Visible time range: 12:00 AM–7:30 PM. Timed To Dos and direct Monthly time blocks occupy their actual Start–End time slots and automatically reduce the surrounding OPEN space. Repeating To Dos appear on every matching day in their date range. Scroll horizontally on smaller screens.</div>`;
 }
 
 function setCourse(id,key,val){state.courses[id][key]=val;save()}
@@ -1044,9 +1113,9 @@ function courseCard(id){
 function courses(){return `<div class="panel-title">Courses & Program Notes</div><div class="panel-sub">Each institution/class now has editable support information plus dedicated learning-note categories.</div><div class="grid2">${Object.keys(COURSE_SEED).map(courseCard).join('')}</div>`}
 
 function addTodo(){
- const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,time=document.getElementById('tdtime').value,endTime=document.getElementById('tdendtime').value,reminder=document.getElementById('tdreminder').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
+ const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,endDate=document.getElementById('tdenddate').value,time=document.getElementById('tdtime').value,endTime=document.getElementById('tdendtime').value,repeat=document.getElementById('tdrepeat').value,reminder=document.getElementById('tdreminder').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
  if(!title)return alert('Enter a task.');
- state.todos.push({id:Date.now(),title,due,time,endTime,reminder,course,priority,done:false});save();render();
+ state.todos.push({id:Date.now(),title,due,endDate,time,endTime,repeat,reminder,course,priority,done:false});save();render();
 }
 function toggleTodo(id){let x=state.todos.find(t=>t.id==id);if(x)x.done=!x.done;save();render()}
 function delTodo(id){state.todos=state.todos.filter(t=>t.id!=id);save();render()}
@@ -1054,23 +1123,25 @@ function editTodo(id,key,val){let x=state.todos.find(t=>t.id==id);if(x){x[key]=v
 function todo(){
  const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999'))||((a.time||'99:99').localeCompare(b.time||'99:99')));
  return `<div class="panel-title">To-Do List</div><div class="panel-sub">Tasks can now have a due date, exact time, and phone reminder. A dated task appears automatically on the dashboard calendar; a timed task appears at that time.</div>
- <div class="alert green"><b>Time + reminder support is on</b>Choose a time and reminder. For an actual iPhone notification while the dashboard is closed, tap <b>Add reminder to iPhone Calendar</b> and import the .ics event into Apple Calendar.</div>
+ <div class="alert green"><b>Time range + repeating schedule support is on</b>For an existing task that still shows as “DUE” at the top of the day, open it here once and set its Start Time / End Time. To repeat a study block, also add an End Date and choose Daily or Weekdays.  For an actual iPhone notification while the dashboard is closed, tap <b>Add reminder to iPhone Calendar</b> and import the .ics event into Apple Calendar.</div>
  <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3>
- <div class="inline3"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div><div class="field"><label>Start Time</label><input id="tdtime" type="time"></div></div>
- <div class="inline3"><div class="field"><label>End Time</label><input id="tdendtime" type="time"><div class="small">Optional. If blank, the calendar block uses 30 minutes.</div></div>
- <div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+ <div class="inline3"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Start / Due Date → Calendar</label><input id="tddue" type="date"></div><div class="field"><label>End Date (optional)</label><input id="tdenddate" type="date"><div class="small">Use this with Repeat to place the To Do across multiple days.</div></div></div>
+ <div class="inline3"><div class="field"><label>Start Time</label><input id="tdtime" type="time"></div><div class="field"><label>End Time</label><input id="tdendtime" type="time"><div class="small">The colored calendar block fills this entire time range.</div></div><div class="field"><label>Repeat</label><select id="tdrepeat"><option value="none">One day only</option><option value="daily">Every day in date range</option><option value="weekdays">Weekdays in date range</option></select></div></div>
+ <div class="inline3"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
  <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div>
  <div class="inline2"><div class="field"><label>Phone Reminder</label><select id="tdreminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div></div>
  <button class="btn" onclick="addTodo()">Add task</button></div>
  <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div style="flex:1">
    <div class="field" style="margin-top:0"><label>Task</label><input value="${esc(t.title)}" onchange="editTodo(${t.id},'title',this.value)"></div>
-   <div class="inline3"><div class="field"><label>Due Date</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
-   <div class="field"><label>Start Time</label><input type="time" value="${esc(t.time||'')}" onchange="editTodo(${t.id},'time',this.value)"></div>
+   <div class="inline3"><div class="field"><label>Start / Due Date</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
+   <div class="field"><label>End Date</label><input type="date" value="${esc(t.endDate||'')}" onchange="editTodo(${t.id},'endDate',this.value)"></div>
+   <div class="field"><label>Repeat</label><select onchange="editTodo(${t.id},'repeat',this.value)"><option value="none" ${(t.repeat||'none')==='none'?'selected':''}>One day only</option><option value="daily" ${t.repeat==='daily'?'selected':''}>Every day in range</option><option value="weekdays" ${t.repeat==='weekdays'?'selected':''}>Weekdays in range</option></select></div></div>
+   <div class="inline2"><div class="field"><label>Start Time</label><input type="time" value="${esc(t.time||'')}" onchange="editTodo(${t.id},'time',this.value)"></div>
    <div class="field"><label>End Time</label><input type="time" value="${esc(t.endTime||'')}" onchange="editTodo(${t.id},'endTime',this.value)"></div></div>
    <div class="field"><label>Phone Reminder</label><select onchange="editTodo(${t.id},'reminder',this.value)"><option value="none" ${(t.reminder||'none')==='none'?'selected':''}>None</option><option value="m10" ${t.reminder==='m10'?'selected':''}>10 min before</option><option value="m30" ${t.reminder==='m30'?'selected':''}>30 min before</option><option value="h1" ${t.reminder==='h1'?'selected':''}>1 hour before</option><option value="d1" ${t.reminder==='d1'?'selected':''}>1 day before</option></select></div></div>
    <div class="inline2"><div class="field"><label>Class / Institution</label><select onchange="editTodo(${t.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${t.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${t.course==='general'?'selected':''}>General</option></select></div>
    <div class="field"><label>Priority</label><select onchange="editTodo(${t.id},'priority',this.value)"><option ${t.priority==='High'?'selected':''}>High</option><option ${t.priority==='Medium'?'selected':''}>Medium</option><option ${t.priority==='Low'?'selected':''}>Low</option></select></div></div>
-   <div class="todo-meta">${t.due?'Calendar: '+t.due:''}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${t.done?'Completed':'Open'}</div>
+   <div class="todo-meta">${t.due?'Calendar: '+t.due+(t.endDate?' → '+t.endDate:''):''}${t.repeat&&t.repeat!=='none'?' · '+t.repeat:''}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${t.done?'Completed':'Open'}</div>
    <div class="todo-actions"><button class="btn ghost" onclick="todoICS(state.todos.find(x=>x.id==${t.id}))">Add reminder to iPhone Calendar</button><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div>
  </div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
 }
