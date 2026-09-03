@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 17</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 18</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -413,7 +413,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 17 · timed To Dos + reminders + mobile fit</footer>
+<footer>Draft 18 · timed To Dos occupy monthly calendar slots</footer>
 </div>
 
 <script>
@@ -520,11 +520,19 @@ function taskColor(course){
  return colors[course]||'#A6373B';
 }
 function taskLabel(t){return `${t.done?'✓ ':''}${t.title}`}
-function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:t.time?clockLabel(t.time):'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
+function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:t.time?(clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):'')):'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
 function clockLabel(v){if(!v)return '';const [h,m]=v.split(':').map(Number),ap=h>=12?'PM':'AM',hh=(h%12)||12;return `${hh}:${String(m).padStart(2,'0')} ${ap}`}
+function todoTimeRange(t){
+ const start=parseClockToMinutes(t&&t.time);
+ if(start==null)return null;
+ let end=parseClockToMinutes(t&&t.endTime);
+ if(end==null||end<=start)end=start+30;
+ return {start,end:Math.min(1170,end)};
+}
+
 function todoICS(t){
  if(!t||!t.due)return alert('Add a due date first.');
- const e={title:'To Do: '+t.title,date:t.due,time:t.time||'09:00',reminder:t.reminder||'none',notes:'Dashboard To Do · '+(t.priority||'Medium')+' priority'};
+ const e={title:'To Do: '+t.title,date:t.due,time:t.time||'09:00',endTime:t.endTime||'',reminder:t.reminder||'none',notes:'Dashboard To Do · '+(t.priority||'Medium')+' priority'};
  downloadICS(e);
 }
 function reminderICS(r){
@@ -660,7 +668,7 @@ function visualScheduleForDate(d){
    const start=parseClockToMinutes(e.time);
    ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:{start,end:Math.min(1170,start+60),title:e.title,color:taskColor(e.category)});
  });
- state.todos.filter(t=>t.due===ymd).forEach(t=>{const s=parseClockToMinutes(t.time);ev.push(s==null?{allDay:true,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:s,end:Math.min(1170,s+30),title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
+ state.todos.filter(t=>t.due===ymd).forEach(t=>{const tr=todoTimeRange(t);ev.push(!tr?{allDay:true,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:tr.start,end:tr.end,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
  state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>{const s=parseClockToMinutes(r.time);ev.push(s==null?{allDay:true,title:'Reminder: '+r.title,color:'#A6373B'}:{start:s,end:Math.min(1170,s+30),title:'Reminder: '+r.title,color:'#A6373B'})});
  return ev;
 }
@@ -713,7 +721,7 @@ function trueDayEvents(d){
    ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:
      {start:start,end:Math.min(1170,start+60),title:e.title,color:taskColor(e.category)});
  });
- state.todos.filter(t=>t.due===ymd).forEach(t=>ev.push({allDay:true,title:'DUE — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}));
+ state.todos.filter(t=>t.due===ymd).forEach(t=>{const tr=todoTimeRange(t);ev.push(!tr?{allDay:true,title:'DUE — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:tr.start,end:tr.end,title:'TO DO — '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
  state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({allDay:true,title:'Reminder — '+r.title,color:'#A6373B'}));
  return ev;
 }
@@ -793,7 +801,7 @@ function plannerTodoSheet(){
    </table>
    <div class="mobile-todo-cards">${rows.length?rows.map(t=>`<div class="m-task ${t.done?'done':''}" style="border-left-color:${taskColor(t.course)}">
       <div class="m-task-top"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div class="m-task-title">${esc(t.title)}</div></div>
-      <div class="m-task-date">${t.due?'Due '+t.due:'No due date'} · ${esc(t.priority||'Medium')} priority</div>
+      <div class="m-task-date">${t.due?'Due '+t.due:'No due date'}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${esc(t.priority||'Medium')} priority</div>
       <input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)">
    </div>`).join(''):'<div class="small">No open tasks yet.</div>'}</div>
    <div class="planner-actions"><button class="btn" onclick="goTab('todo')">Add / manage tasks</button></div>
@@ -1036,9 +1044,9 @@ function courseCard(id){
 function courses(){return `<div class="panel-title">Courses & Program Notes</div><div class="panel-sub">Each institution/class now has editable support information plus dedicated learning-note categories.</div><div class="grid2">${Object.keys(COURSE_SEED).map(courseCard).join('')}</div>`}
 
 function addTodo(){
- const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,time=document.getElementById('tdtime').value,reminder=document.getElementById('tdreminder').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
+ const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,time=document.getElementById('tdtime').value,endTime=document.getElementById('tdendtime').value,reminder=document.getElementById('tdreminder').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
  if(!title)return alert('Enter a task.');
- state.todos.push({id:Date.now(),title,due,time,reminder,course,priority,done:false});save();render();
+ state.todos.push({id:Date.now(),title,due,time,endTime,reminder,course,priority,done:false});save();render();
 }
 function toggleTodo(id){let x=state.todos.find(t=>t.id==id);if(x)x.done=!x.done;save();render()}
 function delTodo(id){state.todos=state.todos.filter(t=>t.id!=id);save();render()}
@@ -1048,19 +1056,21 @@ function todo(){
  return `<div class="panel-title">To-Do List</div><div class="panel-sub">Tasks can now have a due date, exact time, and phone reminder. A dated task appears automatically on the dashboard calendar; a timed task appears at that time.</div>
  <div class="alert green"><b>Time + reminder support is on</b>Choose a time and reminder. For an actual iPhone notification while the dashboard is closed, tap <b>Add reminder to iPhone Calendar</b> and import the .ics event into Apple Calendar.</div>
  <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3>
- <div class="inline3"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div><div class="field"><label>Time</label><input id="tdtime" type="time"></div></div>
- <div class="inline3"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
- <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
- <div class="field"><label>Phone Reminder</label><select id="tdreminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div></div>
+ <div class="inline3"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div><div class="field"><label>Start Time</label><input id="tdtime" type="time"></div></div>
+ <div class="inline3"><div class="field"><label>End Time</label><input id="tdendtime" type="time"><div class="small">Optional. If blank, the calendar block uses 30 minutes.</div></div>
+ <div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+ <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div>
+ <div class="inline2"><div class="field"><label>Phone Reminder</label><select id="tdreminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div></div>
  <button class="btn" onclick="addTodo()">Add task</button></div>
  <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div style="flex:1">
    <div class="field" style="margin-top:0"><label>Task</label><input value="${esc(t.title)}" onchange="editTodo(${t.id},'title',this.value)"></div>
    <div class="inline3"><div class="field"><label>Due Date</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
-   <div class="field"><label>Time</label><input type="time" value="${esc(t.time||'')}" onchange="editTodo(${t.id},'time',this.value)"></div>
+   <div class="field"><label>Start Time</label><input type="time" value="${esc(t.time||'')}" onchange="editTodo(${t.id},'time',this.value)"></div>
+   <div class="field"><label>End Time</label><input type="time" value="${esc(t.endTime||'')}" onchange="editTodo(${t.id},'endTime',this.value)"></div></div>
    <div class="field"><label>Phone Reminder</label><select onchange="editTodo(${t.id},'reminder',this.value)"><option value="none" ${(t.reminder||'none')==='none'?'selected':''}>None</option><option value="m10" ${t.reminder==='m10'?'selected':''}>10 min before</option><option value="m30" ${t.reminder==='m30'?'selected':''}>30 min before</option><option value="h1" ${t.reminder==='h1'?'selected':''}>1 hour before</option><option value="d1" ${t.reminder==='d1'?'selected':''}>1 day before</option></select></div></div>
    <div class="inline2"><div class="field"><label>Class / Institution</label><select onchange="editTodo(${t.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${t.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${t.course==='general'?'selected':''}>General</option></select></div>
    <div class="field"><label>Priority</label><select onchange="editTodo(${t.id},'priority',this.value)"><option ${t.priority==='High'?'selected':''}>High</option><option ${t.priority==='Medium'?'selected':''}>Medium</option><option ${t.priority==='Low'?'selected':''}>Low</option></select></div></div>
-   <div class="todo-meta">${t.due?'Calendar: '+t.due:''}${t.time?' · '+clockLabel(t.time):''} · ${t.done?'Completed':'Open'}</div>
+   <div class="todo-meta">${t.due?'Calendar: '+t.due:''}${t.time?' · '+clockLabel(t.time)+(t.endTime?'–'+clockLabel(t.endTime):''):''} · ${t.done?'Completed':'Open'}</div>
    <div class="todo-actions"><button class="btn ghost" onclick="todoICS(state.todos.find(x=>x.id==${t.id}))">Add reminder to iPhone Calendar</button><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div>
  </div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
 }

@@ -1,3 +1,3 @@
 # India's Learning & Master Schedule Dashboard
 
-Draft 17 adds exact times and phone-reminder options to To Dos and the Reminder Center while preserving Draft 16's responsive mobile layout and editable Notes.
+Draft 18 makes timed To Dos true calendar blocks in the Monthly detailed time-gap view. To Dos now support Start Time and optional End Time; the block fills the corresponding time span. If End Time is omitted, a 30-minute block is used. Existing mobile, Notes, reminder, and calendar features are preserved.
