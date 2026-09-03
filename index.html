@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India's Fall 2026 Master Learning Dashboard — Draft 7</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+:root{
+  --board:#382A21;--paper:#FBF7ED;--paper2:#F3ECDD;--ink:#2A211A;--muted:#6E6255;--faint:#9C917F;--line:#DCD2BC;--gold:#C9A15A;
+  --smc:#315F8A;--codepath:#6E4F9E;--perscholas:#2E7D5B;--study:#B87F1F;--deadline:#A6373B;--notes:#2E8C8C;
+  --python:#4F74B7;--web:#7A4EA3;--cyber:#2E7D5B;--cs4:#B5522F;--cs3:#8A6B2E;--fund:#8A5E1D;
+  --good:#E5F2EA;--warn:#FBF2E1;--bad:#FBEDEA;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;padding:28px 16px 60px;color:var(--ink);font-family:'IBM Plex Sans',sans-serif;
+background:radial-gradient(ellipse at 20% 10%,rgba(255,255,255,.05),transparent 45%),radial-gradient(ellipse at 85% 80%,rgba(255,255,255,.04),transparent 50%),var(--board)}
+.wrap{max-width:1180px;margin:0 auto}
+.masthead{text-align:center;margin-bottom:20px}
+.kicker{font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:'Zilla Slab',serif;font-size:clamp(30px,5vw,46px);color:var(--paper);margin-top:6px}
+.sub{color:rgba(251,247,237,.68);font-size:13.5px;margin-top:7px;font-family:'IBM Plex Mono',monospace}
+.tabs,.subtabs{display:flex;gap:6px;overflow-x:auto;padding:0 2px}
+.tabs{margin:24px 0 -1px}.subtabs{margin:0 0 20px}
+.tab,.subtab{flex:0 0 auto;cursor:pointer;border:1px solid rgba(251,247,237,.18);border-bottom:none;border-radius:9px 9px 0 0;padding:10px 14px 12px;background:rgba(251,247,237,.10);color:var(--paper);font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;opacity:.67}
+.tab.active{background:var(--paper);color:var(--ink);border-color:var(--paper);opacity:1}
+.subtab{border:1px solid var(--line);border-radius:18px;background:var(--paper2);color:var(--muted);padding:7px 11px;opacity:1}
+.subtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px}
+.board{background:var(--paper);border-radius:4px 14px 14px 14px;box-shadow:0 18px 40px rgba(0,0,0,.35);min-height:560px;padding:28px 24px 36px}
+@media(min-width:720px){.board{padding:36px 40px 44px}}
+.panel-title{font-family:'Zilla Slab',serif;font-size:25px;font-weight:700;margin-bottom:5px}
+.panel-sub{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:22px}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px}.grid3{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:760px){.grid2{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:repeat(3,1fr)}}
+.card{position:relative;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:17px 18px;margin-bottom:14px}
+.card:before{content:'';position:absolute;top:-7px;left:20px;width:34px;height:14px;border-radius:2px;background:var(--tone,var(--gold));box-shadow:0 3px 5px rgba(0,0,0,.25)}
+.card h3{font-family:'Zilla Slab',serif;font-size:19px;margin-bottom:8px}.meta{font-size:12.5px;color:var(--muted);line-height:1.6}
+.field{margin-top:12px}label{font:600 10.5px 'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px}
+textarea,input[type=text],input[type=date],input[type=time],input[type=number],select{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:9px 10px;font:13px 'IBM Plex Sans',sans-serif;color:var(--ink)}
+textarea{resize:vertical;line-height:1.5}.inline2{display:grid;grid-template-columns:1fr;gap:9px}.inline3{display:grid;grid-template-columns:1fr;gap:9px}
+@media(min-width:660px){.inline2{grid-template-columns:1fr 1fr}.inline3{grid-template-columns:repeat(3,1fr)}}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:8px;padding:8px 13px;cursor:pointer;font:600 11.5px 'IBM Plex Mono',monospace}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pill{display:inline-block;font:600 10px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:10px}
+.ok{background:#E1EFE7;color:#1F6B48}.pending{background:#FBF2E1;color:#8C6416}.info{background:#E7EEF7;color:#315F8A}.conflict{background:#FBEDEA;color:#9B2F34}
+.alert{border-left:4px solid var(--deadline);background:var(--bad);border-radius:0 8px 8px 0;padding:11px 14px;font-size:13.5px;line-height:1.5;margin-bottom:10px}
+.alert b{display:block;font:600 11px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--deadline);margin-bottom:3px}
+.alert.amber{border-color:var(--study);background:var(--warn)}.alert.amber b{color:#8C6416}.alert.green{border-color:var(--perscholas);background:var(--good)}.alert.green b{color:var(--perscholas)}
+.feedback{background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.feedback strong{color:var(--ink)}
+.stat-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}.stat{flex:1 1 145px;background:var(--paper2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat .num{font-family:'Zilla Slab',serif;font-size:23px;font-weight:700}.stat .lab{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.small{font-size:11.5px;color:var(--muted);line-height:1.5}.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;font:600 10.5px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px 9px;border-bottom:2px solid var(--ink)}
+td{padding:10px 9px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:none}
+.month-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--line);border-top:1px solid var(--line)}
+.cal .dow{background:var(--ink);color:var(--paper);font:600 10px 'IBM Plex Mono',monospace;text-align:center;padding:8px;border-right:1px solid #55483d}
+.daycell{min-height:125px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px;background:var(--paper)}
+.daycell.muted{background:#F7F1E5;color:var(--faint)}.date{font:600 10.5px 'IBM Plex Mono',monospace;margin-bottom:5px}
+.event{font-size:10.5px;line-height:1.25;padding:4px 5px;border-radius:5px;margin:3px 0;color:#fff}.event small{display:block;opacity:.85;font-size:9.5px}
+.todo{display:grid;grid-template-columns:auto 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.todo.done .todo-title{text-decoration:line-through;color:var(--faint)}
+.todo-meta{font-size:11px;color:var(--muted);margin-top:3px}.todo-actions{grid-column:2;display:flex;gap:7px;flex-wrap:wrap;margin-top:5px}
+.learn-card{border:1px solid var(--line);border-radius:10px;padding:15px;background:var(--paper2);margin-bottom:12px}
+.promptbox{background:var(--paper);border:1px dashed var(--line);border-radius:8px;padding:12px;margin-top:10px}
+.funding-item{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:12px;margin:10px 0}.fund-title{font-weight:700}
+footer{color:rgba(251,247,237,.55);text-align:center;font-size:11px;margin-top:16px;font-family:'IBM Plex Mono',monospace}
+.mic-btn{margin-left:6px;border:1px solid var(--line);background:var(--paper);border-radius:7px;padding:6px 8px;cursor:pointer;font-size:13px;vertical-align:middle}
+.mic-btn.listening{background:#FBEDEA;border-color:#A6373B}
+.input-wrap{display:flex;align-items:flex-start;gap:4px}.input-wrap>input,.input-wrap>textarea{flex:1}
+.upload-zone{border:2px dashed var(--line);border-radius:10px;background:var(--paper);padding:14px;margin-top:12px}
+.upload-zone input[type=file]{width:100%;font-size:12px}
+.file-item{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:10px;margin-top:8px}
+.file-name{font-weight:600;font-size:12.5px}.file-meta{font-size:10.5px;color:var(--muted);margin-top:2px}
+.file-preview{max-width:180px;max-height:140px;border-radius:7px;margin-top:8px;border:1px solid var(--line)}
+.text-preview{white-space:pre-wrap;max-height:160px;overflow:auto;font:11px 'IBM Plex Mono',monospace;background:#fffaf0;border:1px solid var(--line);padding:8px;border-radius:6px;margin-top:8px}
+.req{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.req:last-child{border-bottom:none}
+.req input{margin-top:3px;width:16px;height:16px}.req.done .req-text{text-decoration:line-through;color:var(--faint)}
+.req-text{font-size:13px;line-height:1.4}.req-note{font-size:11px;color:var(--muted);margin-top:3px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
+<div class="tabs" id="tabs"></div><div class="board" id="board"></div>
+<footer>Draft 7 · Per Scholas + CodePath Web Development + SMC · uploads + speech-to-text + funding</footer>
+</div>
+
+<script>
+const C={smc:'var(--smc)',codepath:'var(--codepath)',ps:'var(--perscholas)',study:'var(--study)',deadline:'var(--deadline)',notes:'var(--notes)',python:'var(--python)',web:'var(--web)',cs4:'var(--cs4)',cs3:'var(--cs3)',fund:'var(--fund)'};
+
+const COURSE_SEED={
+smc_cs4:{program:'SMC',title:'CS 4',section:'1722',prof:'T. Seno',dates:'Sep 21–Dec 11',hours:'4.5 hrs/week arranged',color:C.cs4},
+smc_py:{program:'SMC',title:'CS 87A — Python',section:'1764',prof:'J. Darwiche',dates:'Sep 21–Dec 11',hours:'4.5 hrs/week arranged',color:C.python},
+smc_cs3:{program:'SMC',title:'CS 3',section:'1717',prof:'Nathan Greenfield',dates:'Oct 26–Dec 18',hours:'6.5 hrs/week arranged',color:C.cs3},
+cp_web:{program:'CodePath',title:'Intro to Web Development',section:'',prof:'',dates:'Starts Sep 16',hours:'Live Wed 3–5 PM PT + projects',color:C.web},
+ps:{program:'Per Scholas',title:'Cybersecurity Training',section:'',prof:'',dates:'Admission pending',hours:'Mon–Fri 9 AM–4 PM if accepted',color:C.ps}
+};
+
+let state;try{state=JSON.parse(localStorage.getItem('india-dashboard-d3')||'{}')}catch(e){state={}}
+state.tab=state.tab||'home';state.scheduleSub=state.scheduleSub||'weekly';state.learnSub=state.learnSub||'ps';state.fundSub=state.fundSub||'grants';
+state.month=state.month||'2026-09';state.courses=state.courses||{};state.todos=state.todos||[];state.reminders=state.reminders||[];state.learning=state.learning||{};state.funding=state.funding||{};
+state.requirements=state.requirements||{};
+state.requirements.aauw=state.requirements.aauw||{};
+state.requirements.codepath=state.requirements.codepath||{};
+for(const [id,s] of Object.entries(COURSE_SEED)){
+ if(!state.courses[id])state.courses[id]={};
+ state.courses[id]=Object.assign({prof:s.prof||'',email:'',officeHours:'',officeLocation:'',labHours:'',labLocation:'',tutoring:'',canvas:'',syllabus:'',concepts:'',keywords:'',takeaways:'',questions:'',assignments:'',notes:''},state.courses[id]);
+ if(!state.learning[id])state.learning[id]={topic:'',explain:'',practice:'',quiz:'',reflection:''};
+}
+for(const k of ['grants','loans','scholarships','fellowships']) if(!state.funding[k]) state.funding[k]=[];
+if(!state.seededDraft6){
+ state.funding.grants.push({
+   id:260930,
+   n:'AAUW Career Development Grant — Winter/Spring 2027',
+   org:'AAUW',
+   due:'2026-09-30',
+   amt:'Up to $8,000',
+   status:'Preparing',
+   notes:'Official deadline: Sep 30, 2026 at 5:00 PM ET / 2:00 PM PT. Eligible program start must fall Jan 1–Jun 30, 2027. Track proof of degree, transcripts, underrepresentation evidence, program/admission documentation, accreditation/credential verification, and application narratives.'
+ });
+ const addTodoOnce=(title,due,course='general',priority='High')=>{
+   if(!state.todos.some(t=>t.title===title)) state.todos.push({id:Date.now()+Math.random(),title,due,course,priority,done:false});
+ };
+ const addReminderOnce=(title,date)=>{
+   if(!state.reminders.some(r=>r.title===title)) state.reminders.push({id:Date.now()+Math.random(),title,date,done:false});
+ };
+ addTodoOnce('AAUW — open application portal and verify program eligibility','2026-09-04');
+ addTodoOnce('AAUW — order/download official transcript(s) and proof of highest degree','2026-09-05');
+ addTodoOnce('AAUW — gather program admission/enrollment documentation and start-date proof','2026-09-07');
+ addTodoOnce('AAUW — gather accreditation/industry credential verification links','2026-09-07');
+ addTodoOnce('AAUW — find current reputable data showing women are underrepresented in the target field','2026-09-08');
+ addTodoOnce('AAUW — draft challenge/barriers narrative (3,000-character limit)','2026-09-10');
+ addTodoOnce('AAUW — draft commitment to women and girls narrative (3,000-character limit)','2026-09-12');
+ addTodoOnce('AAUW — draft career goals/program/grant narrative (5,000-character limit)','2026-09-15');
+ addTodoOnce('AAUW — upload documents and complete full application checklist','2026-09-20');
+ addTodoOnce('AAUW — final completeness review; verify every upload and citation','2026-09-27');
+ addTodoOnce('AAUW — SUBMIT Career Development Grant before 2:00 PM PT','2026-09-30');
+
+ addReminderOnce('CodePath Web Dev — register for Sep 11 orientation','2026-09-05');
+ addReminderOnce('CodePath — add calendar@codepath.com and operations@codepath.org to contacts','2026-09-06');
+ addReminderOnce('CodePath Web Dev — orientation at 12:00 PM PT','2026-09-11');
+ addReminderOnce('CodePath Web Dev — check for course calendar invites','2026-09-12');
+ addReminderOnce('CodePath Web Dev — verify Slack course channel access (expected by Sep 14)','2026-09-14');
+ addReminderOnce('CodePath Intro to Web Development — first class 3:00–5:00 PM PT','2026-09-16');
+ state.seededDraft6=true;
+ save();
+}
+
+function save(){localStorage.setItem('india-dashboard-d3',JSON.stringify(state))}
+function esc(v=''){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+const TABS=[['home','This Week',C.study],['schedule','MY MASTER SCHEDULE',C.smc],['courses','Courses',C.smc],['todo','To Do',C.deadline],['learning','Interactive Learning',C.codepath],['funding','Funding',C.fund],['reminders','Reminders',C.deadline],['notes','Notes',C.notes]];
+function renderTabs(){tabs.innerHTML=TABS.map(t=>`<button class="tab ${state.tab===t[0]?'active':''}" onclick="setTab('${t[0]}')"><span class="dot" style="background:${t[2]}"></span>${t[1]}</button>`).join('')}
+function setTab(x){state.tab=x;save();renderTabs();render()}
+function subtabs(items,current,setter){return `<div class="subtabs">${items.map(x=>`<button class="subtab ${current===x[0]?'active':''}" onclick="${setter}('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
+
+function home(){
+ const todoOpen=state.todos.filter(x=>!x.done).length;
+ return `<div class="panel-title">This Week at a Glance</div><div class="panel-sub">A single control center for classes, sequential schedule, assignments, learning notes, funding, and reminders.</div>
+ <div class="stat-row"><div class="stat"><div class="num">3</div><div class="lab">SMC courses</div></div><div class="stat"><div class="num">1</div><div class="lab">CodePath course</div></div><div class="stat"><div class="num">${todoOpen}</div><div class="lab">Open to-do items</div></div><div class="stat"><div class="num">1 hr</div><div class="lab">Wednesday overlap</div></div></div>
+ <div class="alert"><b>Known Wednesday conflict</b>If accepted to Per Scholas, Wednesday 3–4 PM overlaps with CodePath Web Development. Ask for the Wednesday-only 3 PM departure after acceptance and before committing.</div>
+ <div class="alert green"><b>New in Draft 3</b>Monthly calendar, separate to-do list, one Interactive Learning workspace per class/program, Funding with Grants/Loans/Scholarships/Fellowships, and expanded learning-note fields inside every course.</div>`;
+}
+
+function setScheduleSub(x){state.scheduleSub=x;save();render()}
+function schedule(){
+ const subs=subtabs([['weekly','Daily / Weekly Master Schedule'],['monthly','Monthly Schedule'],['synopsis','Calendar Synopsis']],state.scheduleSub,'setScheduleSub');
+ return `<div class="panel-title">MY MASTER SCHEDULE</div>
+ <div class="panel-sub">Your non-negotiable daily rhythm: early personal time, focused morning study, workout, Per Scholas weekdays if accepted, afternoon/evening review, and protected sleep. Sunday is fully off.</div>
+ ${subs}${state.scheduleSub==='weekly'?weekly():state.scheduleSub==='monthly'?monthly():calendarSynopsis()}`;
+}
+function weekly(){
+ return `
+ <div class="alert green"><b>Sleep + recovery anchor</b>Bedtime is 7:00–7:30 PM. Wake time is 12:00 AM. Sunday is a complete day off — no studying, no catch-up, no negotiations.</div>
+ <div class="card" style="--tone:${C.study}">
+   <h3>Daily Time Blocks · Monday–Saturday</h3>
+   <table>
+     <thead><tr><th>Time</th><th>Block</th><th>Purpose</th></tr></thead>
+     <tbody>
+       <tr><td><b>12:00–3:45 AM</b></td><td>Personal Time</td><td>Food prep, laundry, personal admin, household needs, quiet time — whatever you need for you.</td></tr>
+       <tr><td><b>3:45–6:45 AM</b></td><td>Primary Study Block</td><td>Protected 3-hour focus session. SMC rotation or all-course study depending on the day.</td></tr>
+       <tr><td><b>7:00–8:30 AM</b></td><td>Workout</td><td>1–1.5 hour exercise / movement block.</td></tr>
+       <tr><td><b>9:00 AM–4:00 PM</b></td><td>Per Scholas</td><td>Monday–Friday if accepted. Wednesday may require a 3:00 PM departure for CodePath.</td></tr>
+       <tr><td><b>4:00–5:30/6:00 PM</b></td><td>Review / Study</td><td>Used on designated all-course days and for short review, assignments, or reinforcement when needed.</td></tr>
+       <tr><td><b>6:30 PM</b></td><td>Wind Down</td><td>Close school/work, prepare for sleep, no heavy studying.</td></tr>
+       <tr><td><b>7:00–7:30 PM</b></td><td>Bed</td><td>Protected bedtime.</td></tr>
+     </tbody>
+   </table>
+ </div>
+
+ <div class="card" style="--tone:${C.smc}">
+   <h3>Weekly Study Rotation</h3>
+   <table>
+     <thead><tr><th>Day</th><th>3:45–6:45 AM</th><th>9 AM–4 PM</th><th>4:00–5:30/6 PM</th></tr></thead>
+     <tbody>
+       <tr><td><b>Monday</b></td><td><span class="pill info">SMC</span> CS 87A — Python</td><td>Per Scholas if accepted</td><td>Light review / assignments only if needed</td></tr>
+       <tr><td><b>Tuesday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas if accepted</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
+       <tr><td><b>Wednesday</b></td><td><span class="pill info">SMC</span> CS 4</td><td>Per Scholas if accepted; proposed 3 PM departure</td><td><span class="pill conflict">3–5 PM</span> CodePath Web Development</td></tr>
+       <tr><td><b>Thursday</b></td><td><span class="pill ok">ALL COURSES</span> Mixed study session</td><td>Per Scholas if accepted</td><td><span class="pill ok">ALL COURSES</span> Review / assignments</td></tr>
+       <tr><td><b>Friday</b></td><td><span class="pill info">SMC</span> CS 3</td><td>Per Scholas if accepted</td><td>Light weekly review / closeout</td></tr>
+       <tr><td><b>Saturday</b></td><td><span class="pill ok">ALL COURSES</span> Deep study / catch-up / projects</td><td>Open personal time after workout</td><td>Optional light review only — no forced evening session</td></tr>
+       <tr><td><b>Sunday</b></td><td colspan="3"><span class="pill conflict">DAY OFF</span> No school. No study. No catch-up. No negotiations.</td></tr>
+     </tbody>
+   </table>
+ </div>
+
+ <div class="alert amber"><b>CS 3 timing note</b>CS 3 does not begin until October 26. Before then, Friday's SMC slot can rotate between Python, CS 4, or whichever course needs the most attention that week. Once CS 3 begins, Friday becomes its dedicated SMC block.</div>
+ <div class="alert"><b>Wednesday exception</b>CodePath Web Development runs 3:00–5:00 PM. If Per Scholas accepts you, the only recurring overlap is 3:00–4:00 PM Wednesday. The plan is to ask about leaving Per Scholas at 3:00 PM on Wednesdays after acceptance and before formally committing.</div>`;
+}
+
+function calendarSynopsis(){
+ const [y,m]=state.month.split('-').map(Number), first=new Date(y,m-1,1), last=new Date(y,m,0), start=first.getDay();
+ const title=first.toLocaleString('en-US',{month:'long',year:'numeric'});
+ let cells=[];
+ for(let i=0;i<start;i++){let dd=new Date(y,m-1,1-(start-i));cells.push({d:dd,muted:true})}
+ for(let day=1;day<=last.getDate();day++)cells.push({d:new Date(y,m-1,day),muted:false});
+ while(cells.length%7)cells.push({d:new Date(y,m, cells.length-start-last.getDate()+1),muted:true});
+
+ const synopsisEvents = (dateStr)=>{
+   const d=new Date(dateStr+'T12:00:00'), dow=d.getDay(), ev=[], ymd=dateStr;
+
+   if(dow===0) return [{n:'DAY OFF',c:'#A6373B'}];
+
+   // Condensed study rotation
+   if(dow===1) ev.push({n:'Python AM',c:'#4F74B7'});
+   if(dow===2) ev.push({n:'All Courses AM+PM',c:'#2E7D5B'});
+   if(dow===3) ev.push({n:'CS 4 AM',c:'#B5522F'});
+   if(dow===4) ev.push({n:'All Courses AM+PM',c:'#2E7D5B'});
+   if(dow===5) ev.push({n:(ymd>='2026-10-26'?'CS 3 AM':'SMC Flex AM'),c:'#8A6B2E'});
+   if(dow===6) ev.push({n:'All Courses Deep Study',c:'#2E7D5B'});
+
+   // Per Scholas weekdays
+   if(dow>=1&&dow<=5) ev.push({n:'Per Scholas 9–4',c:'#2E7D5B'});
+
+   // CodePath Wednesdays
+   if(dow===3 && ymd>='2026-09-16') ev.push({n:'CodePath Web 3–5',c:'#7A4EA3'});
+
+   // One-time milestones
+   if(ymd==='2026-09-11') ev.push({n:'Web Orientation 12 PM',c:'#7A4EA3'});
+   if(ymd==='2026-09-21'){ev.push({n:'CS 4 Starts',c:'#B5522F'});ev.push({n:'Python Starts',c:'#4F74B7'})}
+   if(ymd==='2026-10-26') ev.push({n:'CS 3 Starts',c:'#8A6B2E'});
+   if(ymd==='2026-12-11'){ev.push({n:'CS 4 Ends',c:'#B5522F'});ev.push({n:'Python Ends',c:'#4F74B7'})}
+   if(ymd==='2026-12-18') ev.push({n:'CS 3 Ends',c:'#8A6B2E'});
+
+   // User reminders
+   state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({n:'Reminder: '+r.title,c:'#A6373B'}));
+   return ev;
+ };
+
+ return `<div class="month-head">
+   <button class="btn ghost" onclick="changeMonth(-1)">← Previous</button>
+   <div><h3>${title}</h3><div class="small">High-level monthly synopsis</div></div>
+   <button class="btn ghost" onclick="changeMonth(1)">Next →</button>
+ </div>
+ <div class="legend" style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:14px">
+   <span><i class="sw" style="background:#2E7D5B"></i>Per Scholas / All Courses</span>
+   <span><i class="sw" style="background:#7A4EA3"></i>CodePath</span>
+   <span><i class="sw" style="background:#4F74B7"></i>Python</span>
+   <span><i class="sw" style="background:#B5522F"></i>CS 4</span>
+   <span><i class="sw" style="background:#8A6B2E"></i>CS 3 / SMC Flex</span>
+   <span><i class="sw" style="background:#A6373B"></i>Day Off / Reminder</span>
+ </div>
+ <div class="cal">
+   ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="dow">${x}</div>`).join('')}
+   ${cells.map(x=>{
+      const ds=`${x.d.getFullYear()}-${String(x.d.getMonth()+1).padStart(2,'0')}-${String(x.d.getDate()).padStart(2,'0')}`;
+      const ev=synopsisEvents(ds);
+      return `<div class="daycell ${x.muted?'muted':''}" style="min-height:105px">
+        <div class="date">${x.d.getDate()}</div>
+        ${ev.map(e=>`<div class="event" style="background:${e.c};font-size:9.8px">${esc(e.n)}</div>`).join('')}
+      </div>`;
+   }).join('')}
+ </div>
+ <div class="small" style="margin-top:10px">This synopsis intentionally hides your repeating midnight personal block, workout, wind-down, and bedtime so the month stays readable. The detailed Monthly Schedule tab still shows the full daily sequence.</div>`;
+}
+function monthEvents(dateStr){
+ const d=new Date(dateStr+'T12:00:00'), dow=d.getDay(), ev=[], ymd=dateStr;
+
+ // Sunday is protected OFF
+ if(dow===0){
+   ev.push({t:'ALL DAY',n:'DAY OFF — no study / no catch-up',c:'#A6373B'});
+   return ev;
+ }
+
+ // Monday-Saturday morning routine
+ ev.push({t:'12:00 AM',n:'Personal time / food prep / laundry / life admin',c:'#8A6B2E'});
+ ev.push({t:'3:45 AM',n:'Study block',c:'#B87F1F'});
+ ev.push({t:'7:00 AM',n:'Workout',c:'#2E8C8C'});
+
+ // Specific morning study rotation
+ if(dow===1) ev.push({t:'3:45 AM',n:'SMC CS 87A — Python',c:'#4F74B7'});
+ if(dow===2) ev.push({t:'3:45 AM',n:'ALL COURSES — mixed study',c:'#2E7D5B'});
+ if(dow===3) ev.push({t:'3:45 AM',n:'SMC CS 4',c:'#B5522F'});
+ if(dow===4) ev.push({t:'3:45 AM',n:'ALL COURSES — mixed study',c:'#2E7D5B'});
+ if(dow===5) ev.push({t:'3:45 AM',n:(ymd>='2026-10-26'?'SMC CS 3':'SMC flex rotation until CS 3 begins'),c:'#8A6B2E'});
+ if(dow===6) ev.push({t:'3:45 AM',n:'ALL COURSES — deep study / catch-up',c:'#2E7D5B'});
+
+ // Per Scholas projected weekdays
+ if(dow>=1&&dow<=5) ev.push({t:'9:00 AM',n:'Per Scholas — if accepted',c:'#2E7D5B'});
+
+ // Evening review structure
+ if(dow===2||dow===4) ev.push({t:'4:00 PM',n:'ALL COURSES — review / assignments',c:'#B87F1F'});
+ if(dow===3 && ymd>='2026-09-16') ev.push({t:'3:00 PM',n:'CodePath Web Development',c:'#7A4EA3'});
+ if(dow===1||dow===5) ev.push({t:'4:00 PM',n:'Light review if needed',c:'#B87F1F'});
+
+ // Night routine
+ ev.push({t:'6:30 PM',n:'Wind down',c:'#6E6255'});
+ ev.push({t:'7:00 PM',n:'Bedtime window begins',c:'#382A21'});
+
+ // Important one-time milestones
+ if(ymd==='2026-09-11') ev.push({t:'12:00 PM',n:'CodePath Web Orientation',c:'#7A4EA3'});
+ if(ymd==='2026-09-21'){ev.push({t:'Flexible',n:'SMC CS 4 begins',c:'#B5522F'});ev.push({t:'Flexible',n:'SMC CS 87A Python begins',c:'#4F74B7'})}
+ if(ymd==='2026-10-26') ev.push({t:'Flexible',n:'SMC CS 3 begins',c:'#8A6B2E'});
+ if(ymd==='2026-12-11'){ev.push({t:'Flexible',n:'CS 4 ends',c:'#B5522F'});ev.push({t:'Flexible',n:'CS 87A ends',c:'#4F74B7'})}
+ if(ymd==='2026-12-18') ev.push({t:'Flexible',n:'CS 3 ends',c:'#8A6B2E'});
+
+ // User-added reminders
+ state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({t:'Reminder',n:r.title,c:'#A6373B'}));
+
+ const rank=t=>({'12:00 AM':1,'3:45 AM':2,'7:00 AM':3,'9:00 AM':4,'12:00 PM':5,'3:00 PM':6,'4:00 PM':7,'6:30 PM':8,'7:00 PM':9,'Flexible':10,'Reminder':11}[t]||99);
+ return ev.sort((a,b)=>rank(a.t)-rank(b.t));
+}
+function changeMonth(delta){
+ let [y,m]=state.month.split('-').map(Number);m+=delta;if(m<1){m=12;y--}if(m>12){m=1;y++}
+ state.month=`${y}-${String(m).padStart(2,'0')}`;save();render();
+}
+function monthly(){
+ const [y,m]=state.month.split('-').map(Number), first=new Date(y,m-1,1), last=new Date(y,m,0), start=first.getDay();
+ const title=first.toLocaleString('en-US',{month:'long',year:'numeric'});
+ let cells=[];
+ for(let i=0;i<start;i++){let dd=new Date(y,m-1,1-(start-i));cells.push({d:dd,muted:true})}
+ for(let day=1;day<=last.getDate();day++)cells.push({d:new Date(y,m-1,day),muted:false});
+ while(cells.length%7)cells.push({d:new Date(y,m, cells.length-start-last.getDate()+1),muted:true});
+ return `<div class="month-head"><button class="btn ghost" onclick="changeMonth(-1)">← Previous</button><h3>${title}</h3><button class="btn ghost" onclick="changeMonth(1)">Next →</button></div>
+ <div class="cal">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>`<div class="dow">${x}</div>`).join('')}
+ ${cells.map(x=>{const ds=`${x.d.getFullYear()}-${String(x.d.getMonth()+1).padStart(2,'0')}-${String(x.d.getDate()).padStart(2,'0')}`,ev=monthEvents(ds);
+ return `<div class="daycell ${x.muted?'muted':''}"><div class="date">${x.d.getDate()}</div>${ev.map(e=>`<div class="event" style="background:${e.c}"><small>${e.t}</small>${esc(e.n)}</div>`).join('')}</div>`}).join('')}</div>
+ <div class="small" style="margin-top:10px">Each day is displayed in sequential order by time. The month view now follows your master daily rhythm, your SMC study rotation, projected Per Scholas weekdays, CodePath Wednesday class, wind-down time, bedtime, and protected Sundays off.</div>`;
+}
+
+function setCourse(id,key,val){state.courses[id][key]=val;save()}
+function courseCard(id){
+ const s=COURSE_SEED[id],c=state.courses[id];
+ return `<div class="card" style="--tone:${s.color}"><h3>${s.title}</h3><div class="meta"><b>${s.program}</b>${s.section?` · Section ${s.section}`:''}<br>${s.dates}<br>${s.hours}</div>
+ <div class="inline2"><div class="field"><label>Professor / Instructor</label><input value="${esc(c.prof)}" oninput="setCourse('${id}','prof',this.value)"></div><div class="field"><label>Email</label><input value="${esc(c.email)}" oninput="setCourse('${id}','email',this.value)"></div></div>
+ <div class="inline2"><div class="field"><label>Office Hours</label><input value="${esc(c.officeHours)}" oninput="setCourse('${id}','officeHours',this.value)"></div><div class="field"><label>Office / Zoom Location</label><input value="${esc(c.officeLocation)}" oninput="setCourse('${id}','officeLocation',this.value)"></div></div>
+ <div class="inline2"><div class="field"><label>Lab Hours</label><input value="${esc(c.labHours)}" oninput="setCourse('${id}','labHours',this.value)"></div><div class="field"><label>Lab Location / Link</label><input value="${esc(c.labLocation)}" oninput="setCourse('${id}','labLocation',this.value)"></div></div>
+ <div class="field"><label>Tutoring / Support</label><textarea rows="2" oninput="setCourse('${id}','tutoring',this.value)">${esc(c.tutoring)}</textarea></div>
+ <div class="inline2"><div class="field"><label>Canvas / Course Link</label><input value="${esc(c.canvas)}" oninput="setCourse('${id}','canvas',this.value)"></div><div class="field"><label>Syllabus Link / Notes</label><input value="${esc(c.syllabus)}" oninput="setCourse('${id}','syllabus',this.value)"></div></div>
+ <hr style="border:none;border-top:1px solid var(--line);margin:18px 0">
+ <div class="field"><label>Concepts Still Working On</label><textarea rows="3" oninput="setCourse('${id}','concepts',this.value)">${esc(c.concepts)}</textarea></div>
+ <div class="field"><label>Key Words / Vocabulary</label><textarea rows="3" oninput="setCourse('${id}','keywords',this.value)">${esc(c.keywords)}</textarea></div>
+ <div class="field"><label>General Takeaways</label><textarea rows="3" oninput="setCourse('${id}','takeaways',this.value)">${esc(c.takeaways)}</textarea></div>
+ <div class="field"><label>To Ask Professor / Instructor About</label><textarea rows="3" oninput="setCourse('${id}','questions',this.value)">${esc(c.questions)}</textarea></div>
+ <div class="field"><label>Assignments / Projects</label><textarea rows="4" oninput="setCourse('${id}','assignments',this.value)">${esc(c.assignments)}</textarea></div>
+ <div class="field"><label>General Notes</label><textarea rows="4" oninput="setCourse('${id}','notes',this.value)">${esc(c.notes)}</textarea></div></div>`;
+}
+function courses(){return `<div class="panel-title">Courses & Program Notes</div><div class="panel-sub">Each institution/class now has editable support information plus dedicated learning-note categories.</div><div class="grid2">${Object.keys(COURSE_SEED).map(courseCard).join('')}</div>`}
+
+function addTodo(){
+ const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
+ if(!title)return alert('Enter a task.');
+ state.todos.push({id:Date.now(),title,due,course,priority,done:false});save();render();
+}
+function toggleTodo(id){let x=state.todos.find(t=>t.id==id);if(x)x.done=!x.done;save();render()}
+function delTodo(id){state.todos=state.todos.filter(t=>t.id!=id);save();render()}
+function todo(){
+ const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999')));
+ return `<div class="panel-title">To-Do List</div><div class="panel-sub">Separate from reminders: this is your working task list for assignments, study actions, emails, applications, and follow-ups.</div>
+ <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3><div class="inline2"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date</label><input id="tddue" type="date"></div></div>
+ <div class="inline2"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+ <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div><button class="btn" onclick="addTodo()">Add task</button></div>
+ <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div><div class="todo-title">${esc(t.title)}</div><div class="todo-meta">${t.course==='general'?'General':COURSE_SEED[t.course].title} · ${t.priority}${t.due?' · due '+t.due:''}</div><div class="todo-actions"><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div></div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
+}
+
+
+const AAUW_REQS=[
+ ['portal','Create/log in to AAUW Fellowships & Grants application portal','Application is submitted through the AAUW portal.'],
+ ['eligibility','Confirm selected certificate/training program is eligible and starts Jan 1–Jun 30, 2027','Career Development Grant is for eligible certificate/training programs, not degree programs.'],
+ ['degree','Upload proof of highest degree earned','Diploma/degree certificate or qualifying official proof.'],
+ ['transcript','Upload academic transcript(s) for highest degree','Official transcripts are highly encouraged; transfer-course transcript details may also be needed.'],
+ ['underrep','Document women’s underrepresentation in target field','Use current reputable data and include direct links/citations.'],
+ ['program','Enter selected program/institution information','You may list up to five eligible programs in the application.'],
+ ['admission','Upload admission/enrollment or start-date documentation','If admitted, use official admission letter with anticipated start date; if enrolled, use transcript/course listing or enrollment verification.'],
+ ['accred','Provide direct accreditation or industry-credential verification','Use a direct page/document showing the relevant accreditation/credential information.'],
+ ['narr1','Complete challenges/barriers narrative','Sample application: up to 3,000 characters.'],
+ ['narr2','Complete commitment to women and girls narrative','Sample application: up to 3,000 characters.'],
+ ['narr3','Complete career goals / program / grant impact narrative','Sample application: up to 5,000 characters.'],
+ ['review','Review every field, upload, citation, and date for completeness','AAUW states applicants are responsible for confirming materials are accurate and complete.'],
+ ['submit','Submit before Sep 30, 2026 at 5 PM ET / 2 PM PT','Do not wait until the final minutes.']
+];
+const CODEPATH_REQS=[
+ ['orientreg','Register for Web Development orientation','Orientation: Sep 11, 2026 at 12:00 PM PT.'],
+ ['contacts','Add CodePath calendar/operations addresses to contacts','Add calendar@codepath.com and operations@codepath.org so calendar messages reach the inbox.'],
+ ['calendar','Watch for class calendar invitations','CodePath says invites for class sessions will arrive before the course start date.'],
+ ['slack','Confirm Slack course-channel access','CodePath says the course channel should be added at least two days before the first session.'],
+ ['day1','Be ready for first Web Development class','Sep 16, Wednesday 3:00–5:00 PM PT.']
+];
+function reqList(group,items){
+ return `<div>${items.map(([id,title,note])=>{
+   const done=!!state.requirements[group][id];
+   return `<div class="req ${done?'done':''}"><input type="checkbox" ${done?'checked':''} onchange="toggleReq('${group}','${id}')"><div><div class="req-text">${title}</div><div class="req-note">${note}</div></div></div>`;
+ }).join('')}</div>`;
+}
+function toggleReq(group,id){state.requirements[group][id]=!state.requirements[group][id];save();render()}
+
+function setLearnSub(x){state.learnSub=x;save();render()}
+function setLearn(id,key,val){state.learning[id][key]=val;save()}
+function learning(){
+ const ids=['ps','cp_web','smc_cs4','smc_py','smc_cs3'];
+ const names={ps:'Per Scholas',cp_web:'CodePath Web',smc_cs4:'SMC CS 4',smc_py:'SMC Python',smc_cs3:'SMC CS 3'};
+ if(!ids.includes(state.learnSub))state.learnSub='ps';
+ const id=state.learnSub,l=state.learning[id],s=COURSE_SEED[id];
+ return `<div class="panel-title">Interactive Learning</div><div class="panel-sub">One learning workspace per class/program — now with file/image/text uploads and speech-to-text.</div>
+ ${subtabs(ids.map(x=>[x,names[x]]),state.learnSub,'setLearnSub')}
+ <div class="learn-card"><h3>${s.title}</h3><div class="meta">${s.program}</div>
+ ${id==='cp_web'?`<div class="card" style="--tone:${C.web}"><h3>Before Day 1</h3>${reqList('codepath',CODEPATH_REQS)}</div>`:''}
+ <div class="field"><label>Topic / Concept I Am Learning</label><input value="${esc(l.topic)}" oninput="setLearn('${id}','topic',this.value)"></div>
+ <div class="field"><label>Explain It In My Own Words</label><textarea rows="4" oninput="setLearn('${id}','explain',this.value)">${esc(l.explain)}</textarea></div>
+ <div class="field"><label>Practice / Example</label><textarea rows="4" placeholder="Write code, solve a problem, describe a scenario..." oninput="setLearn('${id}','practice',this.value)">${esc(l.practice)}</textarea></div>
+ <div class="field"><label>Questions / Quiz Me On This</label><textarea rows="4" placeholder="Add questions you want to be tested on..." oninput="setLearn('${id}','quiz',this.value)">${esc(l.quiz)}</textarea></div>
+ <div class="field"><label>Reflection: What Is Still Unclear?</label><textarea rows="4" oninput="setLearn('${id}','reflection',this.value)">${esc(l.reflection)}</textarea></div>
+
+ <div class="upload-zone">
+   <label>Upload Learning Files / Images / Text Documents</label>
+   <div class="small" style="margin-bottom:8px">Supports images, TXT, Markdown, CSV, JSON, PDF, DOC/DOCX and other files. Images can preview; plain-text formats also show a text preview. Files are stored locally in this browser using IndexedDB.</div>
+   <input type="file" multiple accept="image/*,.txt,.md,.csv,.json,.pdf,.doc,.docx,.rtf,.html,.py,.js,.css" onchange="handleLearningFiles('${id}',this.files)">
+   <div id="files-${id}"><div class="small" style="margin-top:8px">Loading files…</div></div>
+ </div>
+
+ <div class="promptbox"><strong>Use with ChatGPT:</strong><div class="small" style="margin-top:5px">Upload class materials here for organization. To have me actually read/analyze a document, attach it in this ChatGPT conversation too; the standalone dashboard cannot transmit local files to me automatically.</div></div>
+ </div>`;
+}
+function setFundSub(x){state.fundSub=x;save();render()}
+function addFunding(){
+ const n=document.getElementById('fname').value.trim(),org=document.getElementById('forg').value.trim(),due=document.getElementById('fdue').value,amt=document.getElementById('famt').value,status=document.getElementById('fstatus').value,notes=document.getElementById('fnotes').value;
+ if(!n)return alert('Enter a funding opportunity name.');
+ state.funding[state.fundSub].push({id:Date.now(),n,org,due,amt,status,notes});save();render();
+}
+function delFunding(id){state.funding[state.fundSub]=state.funding[state.fundSub].filter(x=>x.id!=id);save();render()}
+function funding(){
+ const types=[['grants','Grants'],['loans','Loans'],['scholarships','Scholarships'],['fellowships','Fellowships']], rows=state.funding[state.fundSub];
+ return `<div class="panel-title">Funding</div><div class="panel-sub">Track education funding separately by opportunity type, deadline, amount, status, requirements, and progress.</div>
+ ${subtabs(types,state.fundSub,'setFundSub')}
+ ${state.fundSub==='grants'?`<div class="card" style="--tone:${C.fund}"><h3>AAUW Career Development Grant Checklist</h3><div class="meta"><b>Winter/Spring 2027 round:</b> closes Sep 30, 2026 at 5:00 PM ET / 2:00 PM PT · award up to $8,000.</div>${reqList('aauw',AAUW_REQS)}
+ <div class="feedback"><strong>Note about recommendations:</strong> the current public Career Development Grant requirements reviewed for this dashboard do not list a recommendation letter. If your live application portal requests a reference or recommendation, add it here and follow the portal.</div></div>`:''}
+ <div class="card" style="--tone:${C.fund}"><h3>Add ${types.find(x=>x[0]===state.fundSub)[1].slice(0,-1)} Opportunity</h3>
+ <div class="inline2"><div class="field"><label>Name</label><input id="fname"></div><div class="field"><label>Organization / School</label><input id="forg"></div></div>
+ <div class="inline3"><div class="field"><label>Deadline</label><input id="fdue" type="date"></div><div class="field"><label>Amount</label><input id="famt" placeholder="$"></div><div class="field"><label>Status</label><select id="fstatus"><option>Researching</option><option>Eligible</option><option>Preparing</option><option>Applied</option><option>Awarded</option><option>Not selected</option></select></div></div>
+ <div class="field"><label>Notes / Requirements</label><textarea id="fnotes" rows="3"></textarea></div><button class="btn" onclick="addFunding()">Add opportunity</button></div>
+ <div class="card"><h3>${types.find(x=>x[0]===state.fundSub)[1]}</h3>${rows.length?rows.map(x=>`<div class="funding-item"><div class="fund-title">${esc(x.n)}</div><div class="small">${esc(x.org)}${x.amt?' · '+esc(x.amt):''}${x.due?' · deadline '+x.due:''} · ${x.status}</div>${x.notes?`<div style="margin-top:7px;font-size:12.5px">${esc(x.notes)}</div>`:''}<div class="btnrow"><button class="btn ghost" onclick="delFunding(${x.id})">Delete</button></div></div>`).join(''):'<div class="small">No opportunities entered yet.</div>'}</div>`;
+}
+
+function addReminder(){
+ const title=document.getElementById('rtitle').value.trim(),date=document.getElementById('rdate').value;if(!title||!date)return alert('Enter title and date.');
+ state.reminders.push({id:Date.now(),title,date,done:false});save();render();
+}
+function toggleReminder(id){let x=state.reminders.find(r=>r.id==id);if(x)x.done=!x.done;save();render()}
+function delReminder(id){state.reminders=state.reminders.filter(r=>r.id!=id);save();render()}
+function reminders(){
+ return `<div class="panel-title">Reminder Center</div><div class="panel-sub">Dashboard reminders appear here and on the monthly calendar. They are local to this file, not background ChatGPT alerts.</div>
+ <div class="card"><div class="inline2"><div class="field"><label>Reminder</label><input id="rtitle"></div><div class="field"><label>Date</label><input id="rdate" type="date"></div></div><button class="btn" onclick="addReminder()">Add reminder</button></div>
+ <div class="card">${state.reminders.length?state.reminders.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`<div class="todo ${r.done?'done':''}"><input type="checkbox" ${r.done?'checked':''} onchange="toggleReminder(${r.id})"><div><div class="todo-title">${esc(r.title)}</div><div class="todo-meta">${r.date}</div><div class="todo-actions"><button class="btn ghost" onclick="delReminder(${r.id})">Delete</button></div></div></div>`).join(''):'<div class="small">No reminders yet.</div>'}</div>
+ <div class="alert green"><b>Actual ChatGPT reminders</b>If you want a true notification at a future time, tell me which item and when; I can create that separately in ChatGPT.</div>`;
+}
+
+function notes(){
+ return `<div class="panel-title">Notes Index</div><div class="panel-sub">Your detailed class notes now live inside each Course card. This tab is a quick reminder of the categories you are building for every institution/class.</div>
+ <div class="grid2">${Object.entries(COURSE_SEED).map(([id,s])=>{const c=state.courses[id];return `<div class="card" style="--tone:${s.color}"><h3>${s.title}</h3><div class="small"><b>Concepts still working on:</b> ${c.concepts?esc(c.concepts).slice(0,150):'—'}<br><br><b>Key words:</b> ${c.keywords?esc(c.keywords).slice(0,150):'—'}<br><br><b>General takeaways:</b> ${c.takeaways?esc(c.takeaways).slice(0,150):'—'}<br><br><b>To ask professor:</b> ${c.questions?esc(c.questions).slice(0,150):'—'}<br><br><b>Assignments:</b> ${c.assignments?esc(c.assignments).slice(0,150):'—'}</div></div>`}).join('')}</div>`;
+}
+
+
+/* ---------- Local file storage for Interactive Learning ---------- */
+const DB_NAME='india-learning-files', DB_STORE='files';
+function openFileDB(){
+ return new Promise((resolve,reject)=>{
+   const r=indexedDB.open(DB_NAME,1);
+   r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(DB_STORE))db.createObjectStore(DB_STORE,{keyPath:'key'})};
+   r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+ });
+}
+async function handleLearningFiles(courseId,fileList){
+ const db=await openFileDB(), tx=db.transaction(DB_STORE,'readwrite'), store=tx.objectStore(DB_STORE);
+ for(const file of Array.from(fileList)){
+   store.put({key:courseId+'::'+Date.now()+'::'+file.name,courseId,name:file.name,type:file.type,size:file.size,added:new Date().toISOString(),blob:file});
+ }
+ tx.oncomplete=()=>loadLearningFiles(courseId);
+}
+async function getCourseFiles(courseId){
+ const db=await openFileDB();
+ return new Promise((resolve,reject)=>{
+   const tx=db.transaction(DB_STORE,'readonly'), req=tx.objectStore(DB_STORE).getAll();
+   req.onsuccess=()=>resolve(req.result.filter(x=>x.courseId===courseId).sort((a,b)=>b.added.localeCompare(a.added)));
+   req.onerror=()=>reject(req.error);
+ });
+}
+async function deleteLearningFile(key,courseId){
+ const db=await openFileDB(),tx=db.transaction(DB_STORE,'readwrite');tx.objectStore(DB_STORE).delete(key);tx.oncomplete=()=>loadLearningFiles(courseId);
+}
+async function openLearningFile(key){
+ const db=await openFileDB();
+ const rec=await new Promise((resolve,reject)=>{const r=db.transaction(DB_STORE,'readonly').objectStore(DB_STORE).get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
+ if(rec){const url=URL.createObjectURL(rec.blob);window.open(url,'_blank');setTimeout(()=>URL.revokeObjectURL(url),60000)}
+}
+async function loadLearningFiles(courseId){
+ const holder=document.getElementById('files-'+courseId);if(!holder)return;
+ const files=await getCourseFiles(courseId);
+ if(!files.length){holder.innerHTML='<div class="small" style="margin-top:8px">No files uploaded for this class yet.</div>';return}
+ holder.innerHTML='';
+ for(const f of files){
+   const div=document.createElement('div');div.className='file-item';
+   let preview='';
+   if((f.type||'').startsWith('image/')){
+     const url=URL.createObjectURL(f.blob); preview=`<img class="file-preview" src="${url}" alt="">`;
+   }
+   div.innerHTML=`<div class="file-name">${esc(f.name)}</div><div class="file-meta">${f.type||'file'} · ${(f.size/1024).toFixed(1)} KB</div>${preview}<div class="btnrow"><button class="btn ghost" onclick="openLearningFile('${f.key.replace(/'/g,"\\'")}')">Open</button><button class="btn ghost" onclick="deleteLearningFile('${f.key.replace(/'/g,"\\'")}','${courseId}')">Delete</button></div>`;
+   holder.appendChild(div);
+   if(f.type.startsWith('text/') || /\.(txt|md|csv|json|py|js|css|html)$/i.test(f.name)){
+     try{const txt=await f.blob.text();const pre=document.createElement('div');pre.className='text-preview';pre.textContent=txt.slice(0,5000);div.insertBefore(pre,div.querySelector('.btnrow'))}catch(e){}
+   }
+ }
+}
+
+/* ---------- Speech-to-text for text inputs / textareas ---------- */
+function addMicButtons(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ document.querySelectorAll('input[type="text"], textarea').forEach(el=>{
+   if(el.dataset.micAdded)return; el.dataset.micAdded='1';
+   const btn=document.createElement('button');btn.type='button';btn.className='mic-btn';btn.title='Speak to text';btn.textContent='🎙️';
+   btn.onclick=()=>{
+     if(!SR){alert('Speech-to-text is not supported by this browser. Chrome, Edge, or Safari usually work best.');return}
+     const r=new SR();r.lang='en-US';r.interimResults=false;r.continuous=false;btn.classList.add('listening');btn.textContent='●';
+     r.onresult=e=>{
+       const spoken=Array.from(e.results).map(x=>x[0].transcript).join(' ');
+       const start=el.selectionStart??el.value.length,end=el.selectionEnd??el.value.length;
+       el.value=el.value.slice(0,start)+(el.value && start>0?' ':'')+spoken+el.value.slice(end);
+       el.dispatchEvent(new Event('input',{bubbles:true}));
+     };
+     r.onend=()=>{btn.classList.remove('listening');btn.textContent='🎙️'};r.onerror=()=>{btn.classList.remove('listening');btn.textContent='🎙️'};r.start();
+   };
+   el.insertAdjacentElement('afterend',btn);
+ });
+}
+
+function render(){
+ const b=document.getElementById('board');
+ b.innerHTML=state.tab==='home'?home():state.tab==='schedule'?schedule():state.tab==='courses'?courses():state.tab==='todo'?todo():state.tab==='learning'?learning():state.tab==='funding'?funding():state.tab==='reminders'?reminders():notes();
+ setTimeout(()=>{addMicButtons(); if(state.tab==='learning')loadLearningFiles(state.learnSub)},0);
+}
+renderTabs();render();
+</script>
+</body>
+</html>
