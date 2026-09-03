@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 15</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 16</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -262,24 +262,143 @@ img,svg,canvas{max-width:100%;height:auto}
 }
 
 
-/* Draft 15 Notes workspace */
-.note-entry{border:1px solid var(--line);border-left:5px solid #7A4EA3;border-radius:9px;padding:11px;margin:10px 0;background:#fffdf8}
-.note-entry-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.note-entry-title{font-weight:700;font-size:15px}
-.note-entry-meta{font-size:11px;color:var(--muted);margin-top:3px}
-.note-body{white-space:pre-wrap;font-size:13px;line-height:1.5;margin-top:8px}
-.note-synopsis{margin-top:9px;padding:8px;border-radius:6px;background:#f3edf7;font-size:12px}
-.notes-list{display:grid;gap:10px}
+/* Draft 15 — hard mobile-width fix */
+html,body{width:100%;max-width:100%;overflow-x:hidden}
+.wrap{width:100%;max-width:1180px}
+.board{width:100%;max-width:100%;overflow:hidden}
+.schedule-with-todos,.schedule-with-todos>div,.planner-shell,.planner-shell>div,
+.planner-card,.true-month-wrap,.month-grid,.card{min-width:0!important;max-width:100%}
+.true-month-wrap{contain:inline-size}
+
+.mobile-todo-cards{display:none}
+.mobile-note-cards{display:none}
+
 @media(max-width:700px){
-  /* Strong phone-specific shell so the difference is obvious */
-  body{font-size:15px!important}
-  .wrap,.shell,.notebook,.paper{width:100%!important;max-width:100%!important;margin:0!important}
-  .panel{padding:12px!important}
-  .header,.masthead{padding-left:12px!important;padding-right:12px!important}
-  .note-entry-head{display:block}
-  .note-entry{padding:12px!important}
-  .notes-list{display:block}
-  .planner-shell>*{width:100%!important}
+  .wrap{width:100%!important;max-width:100%!important;margin:0!important}
+  .masthead{padding:14px 14px 2px!important;text-align:left!important}
+  .masthead h1{font-size:26px!important}
+  .sub{font-size:11px!important;line-height:1.35!important}
+  .tabs{padding:0 10px!important;margin-top:12px!important}
+  .board{padding:18px 14px 26px!important;border-radius:0!important;width:100%!important;max-width:100%!important}
+  .schedule-with-todos{display:block!important;width:100%!important;max-width:100%!important}
+  .schedule-with-todos>div{width:100%!important;max-width:100%!important;overflow:hidden!important}
+  .planner-shell{display:block!important;width:100%!important;max-width:100%!important}
+  .planner-shell>div{width:100%!important;max-width:100%!important}
+  .planner-card{width:100%!important;max-width:100%!important}
+  .mini-month{width:100%!important;max-width:100%!important}
+  .mini-month th,.mini-month td{padding:6px 1px!important;font-size:10px!important}
+  .mini-month td{height:34px!important}
+
+  /* Desktop to-do table becomes phone-friendly cards */
+  .todo-sheet{display:none!important}
+  .mobile-todo-cards{display:block!important;padding:8px}
+  .m-task{border:1px solid var(--line);border-left:5px solid var(--deadline);border-radius:8px;background:#fffdf8;padding:10px;margin:8px 0}
+  .m-task.done{opacity:.55}
+  .m-task-top{display:flex;align-items:flex-start;gap:9px}
+  .m-task-title{font-size:13px;font-weight:600;line-height:1.35;flex:1}
+  .m-task-date{font-size:11px;color:var(--muted);margin:6px 0 0 26px}
+  .m-task input[type=date]{margin:7px 0 0 26px;width:calc(100% - 26px)!important}
+
+  /* Running Things To Do stays beneath planner, no desktop side rail */
+  .todo-side{width:100%!important;max-width:100%!important;margin:12px 0 0!important}
+
+  /* True time calendar is contained inside its own scroller, not allowed to widen page */
+  .true-month-wrap{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    -webkit-overflow-scrolling:touch!important;
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .true-month-grid{
+    width:980px!important;
+    min-width:980px!important;
+    max-width:none!important;
+    grid-template-columns:50px repeat(7,132px)!important;
+  }
+
+  /* Notes mobile cards */
+  .notes-desktop-grid{display:none!important}
+  .mobile-note-cards{display:block!important}
+  .note-entry-card{border:1px solid var(--line);border-radius:9px;background:var(--paper2);padding:11px;margin:10px 0}
+}
+
+
+/* Draft 16 — final phone fit */
+@media(max-width:700px){
+  /* Keep the compact month entirely visible: all 7 days fit on-screen */
+  .planner-card .mini-month{
+    width:100%!important;
+    table-layout:fixed!important;
+    border-collapse:collapse!important;
+  }
+  .planner-card .mini-month th,
+  .planner-card .mini-month td{
+    width:14.2857%!important;
+    min-width:0!important;
+    max-width:none!important;
+    padding:5px 0!important;
+    font-size:10px!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+  }
+  .planner-card .mini-month td{height:32px!important}
+  .planner-card .planner-bar{padding:9px 10px!important}
+
+  /* The three schedule-view controls fit cleanly instead of being clipped */
+  .schedule-switcher,
+  .schedule-tabs,
+  .subtabs{
+    width:100%!important;
+    max-width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    overflow:visible!important;
+  }
+  .schedule-switcher button,
+  .schedule-tabs button,
+  .subtabs button,
+  .subtab{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+    white-space:normal!important;
+    text-align:center!important;
+    line-height:1.2!important;
+  }
+
+  /* If the markup uses a plain button row, make that row wrap instead of clip */
+  .btnrow{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow:visible!important;
+  }
+  .btnrow > button{
+    flex:1 1 100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+
+  /* Prevent headings/subtitles from extending the canvas */
+  .panel-title,.panel-sub,.schedule-section-label,h1,h2,h3{
+    max-width:100%!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Mobile planner/cards always stay inside the cream board */
+  .planner-shell,.planner-card,.planner-card table,.planner-notes,
+  .mobile-todo-cards,.todo-side{
+    box-sizing:border-box!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
 }
 
 </style>
@@ -294,7 +413,7 @@ img,svg,canvas{max-width:100%;height:auto}
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 15 · responsive phone planner + full editable Notes workspace</footer>
+<footer>Draft 16 · final mobile fit + full editable notes</footer>
 </div>
 
 <script>
@@ -321,7 +440,8 @@ state.programDates.smc_cs4=Object.assign({start:'2026-09-21',end:'2026-12-11'},s
 state.programDates.smc_py=Object.assign({start:'2026-09-21',end:'2026-12-11'},state.programDates.smc_py||{});
 state.programDates.smc_cs3=Object.assign({start:'2026-10-26',end:'2026-12-18'},state.programDates.smc_cs3||{});
 state.calendarEvents=state.calendarEvents||[];
-state.fullNotes=state.fullNotes||[];
+state.noteEntries=state.noteEntries||[];
+state.plannerNotes=state.plannerNotes||'';
 for(const [id,s] of Object.entries(COURSE_SEED)){
  if(!state.courses[id])state.courses[id]={};
  state.courses[id]=Object.assign({prof:s.prof||'',email:'',officeHours:'',officeLocation:'',labHours:'',labLocation:'',tutoring:'',canvas:'',syllabus:'',concepts:'',keywords:'',takeaways:'',questions:'',assignments:'',notes:''},state.courses[id]);
@@ -380,7 +500,7 @@ function esc(v=''){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 const TABS=[['home','This Week',C.study],['schedule','MY MASTER SCHEDULE',C.smc],['courses','Courses',C.smc],['todo','To Do',C.deadline],['learning','Interactive Learning',C.codepath],['funding','Funding',C.fund],['reminders','Reminders',C.deadline],['notes','Notes',C.notes]];
 function renderTabs(){tabs.innerHTML=TABS.map(t=>`<button class="tab ${state.tab===t[0]?'active':''}" onclick="setTab('${t[0]}')"><span class="dot" style="background:${t[2]}"></span>${t[1]}</button>`).join('')}
 function setTab(x){state.tab=x;save();renderTabs();render()}
-function subtabs(items,current,setter){return `<div class="subtabs">${items.map(x=>`<button class="subtab ${current===x[0]?'active':''}" onclick="${setter}('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
+function subtabs(items,current,setter){return `<div class="subtabs schedule-switcher">${items.map(x=>`<button class="subtab ${current===x[0]?'active':''}" onclick="${setter}('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 
 
 function setProgramDate(id,key,val){
@@ -649,8 +769,7 @@ function plannerMonth(){
 }
 function plannerTodoSheet(){
  const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999')));
- const padded=[...rows];
- while(padded.length<12)padded.push(null);
+ const padded=[...rows]; while(padded.length<12)padded.push(null);
  return `<div class="planner-card">
    <div class="planner-bar todo">To Do List:</div>
    <table class="todo-sheet">
@@ -661,6 +780,11 @@ function plannerTodoSheet(){
        <td><input type="text" value="${esc(t.title)}" onchange="editTodo(${t.id},'title',this.value)"></td>
      </tr>`:`<tr><td class="done-col"></td><td></td><td></td></tr>`).join('')}</tbody>
    </table>
+   <div class="mobile-todo-cards">${rows.length?rows.map(t=>`<div class="m-task ${t.done?'done':''}" style="border-left-color:${taskColor(t.course)}">
+      <div class="m-task-top"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div class="m-task-title">${esc(t.title)}</div></div>
+      <div class="m-task-date">${t.due?'Due '+t.due:'No due date'} · ${esc(t.priority||'Medium')} priority</div>
+      <input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)">
+   </div>`).join(''):'<div class="small">No open tasks yet.</div>'}</div>
    <div class="planner-actions"><button class="btn" onclick="goTab('todo')">Add / manage tasks</button></div>
  </div>`;
 }
@@ -693,47 +817,6 @@ function runningTodoPanel(){
    </div>`).join(''):`<div class="small">No open tasks right now.</div>`}
    <div class="btnrow"><button class="btn" onclick="goTab('todo')">Open full To Do list</button></div>
  </aside>`;
-}
-
-
-function addFullNote(){
- const title=(document.getElementById('fn-title')||{}).value?.trim();
- const date=(document.getElementById('fn-date')||{}).value||ymdLocal(new Date());
- const course=(document.getElementById('fn-course')||{}).value||'general';
- const body=(document.getElementById('fn-body')||{}).value?.trim()||'';
- const synopsis=(document.getElementById('fn-synopsis')||{}).value?.trim()||'';
- if(!title && !body)return alert('Add a note title or note text.');
- state.fullNotes.unshift({id:Date.now(),title:title||'Untitled note',date,course,body,synopsis});
- save();render();
-}
-function editFullNote(id,key,val){const n=state.fullNotes.find(x=>x.id==id);if(n){n[key]=val;save();render()}}
-function deleteFullNote(id){state.fullNotes=state.fullNotes.filter(x=>x.id!=id);save();render()}
-function fullNotesWorkspace(){
- const notes=[...state.fullNotes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
- return `<div class="panel-title">Notes Index</div>
- <div class="panel-sub">This is now a full note-taking workspace. The <b>Full Notes</b> field is for everything you want to capture; Synopsis is optional and separate.</div>
- <div class="card" style="--tone:#7A4EA3">
-   <h3>New Note</h3>
-   <div class="inline3">
-    <div class="field"><label>Note Title</label><input id="fn-title" placeholder="e.g. Python loops — Sept 3 study"></div>
-    <div class="field"><label>Date</label><input id="fn-date" type="date" value="${ymdLocal(new Date())}"></div>
-    <div class="field"><label>Course / Program</label><select id="fn-course">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
-   </div>
-   <div class="field"><label>Full Notes</label><textarea id="fn-body" rows="10" placeholder="Write all of your class, study, meeting, or learning notes here..."></textarea></div>
-   <div class="field"><label>Synopsis / Quick Summary (optional)</label><textarea id="fn-synopsis" rows="3" placeholder="Short summary for quick reference..."></textarea></div>
-   <button class="btn" onclick="addFullNote()">Save note</button>
- </div>
- <div class="card"><h3>Saved Notes</h3>
- ${notes.length?`<div class="notes-list">${notes.map(n=>`<div class="note-entry" style="border-left-color:${taskColor(n.course)}">
-   <div class="note-entry-head"><div><div class="note-entry-title">${esc(n.title)}</div><div class="note-entry-meta">${esc(n.date||'No date')} · ${esc((COURSE_SEED[n.course]||{}).title||'General')}</div></div>
-   <button class="btn ghost" onclick="deleteFullNote(${n.id})">Delete</button></div>
-   <div class="field"><label>Title</label><input value="${esc(n.title)}" onchange="editFullNote(${n.id},'title',this.value)"></div>
-   <div class="inline2"><div class="field"><label>Date</label><input type="date" value="${esc(n.date||'')}" onchange="editFullNote(${n.id},'date',this.value)"></div>
-   <div class="field"><label>Course</label><select onchange="editFullNote(${n.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${n.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${n.course==='general'?'selected':''}>General</option></select></div></div>
-   <div class="field"><label>Full Notes</label><textarea rows="8" onchange="editFullNote(${n.id},'body',this.value)">${esc(n.body||'')}</textarea></div>
-   <div class="field"><label>Synopsis / Quick Summary</label><textarea rows="3" onchange="editFullNote(${n.id},'synopsis',this.value)">${esc(n.synopsis||'')}</textarea></div>
- </div>`).join('')}</div>`:'<div class="small">No saved notes yet. Your first note will appear here.</div>'}
- </div>`;
 }
 
 function home(){
@@ -1059,9 +1142,46 @@ function reminders(){
  <div class="alert green"><b>Actual ChatGPT reminders</b>If you want a true notification at a future time, tell me which item and when; I can create that separately in ChatGPT.</div>`;
 }
 
+function addNoteEntry(){
+ const title=document.getElementById('note-title').value.trim();
+ const date=document.getElementById('note-date').value;
+ const course=document.getElementById('note-course').value;
+ const body=document.getElementById('note-body').value.trim();
+ const synopsis=document.getElementById('note-synopsis').value.trim();
+ if(!title && !body)return alert('Add a note title or note text.');
+ state.noteEntries.push({id:Date.now(),title:title||'Untitled note',date,course,body,synopsis});
+ save();render();
+}
+function editNoteEntry(id,key,val){const n=state.noteEntries.find(x=>x.id==id);if(n){n[key]=val;save()}}
+function deleteNoteEntry(id){state.noteEntries=state.noteEntries.filter(x=>x.id!=id);save();render()}
 function notes(){
- return `<div class="panel-title">Notes Index</div><div class="panel-sub">Your detailed class notes now live inside each Course card. This tab is a quick reminder of the categories you are building for every institution/class.</div>
- <div class="grid2">${Object.entries(COURSE_SEED).map(([id,s])=>{const c=state.courses[id];return `<div class="card" style="--tone:${s.color}"><h3>${s.title}</h3><div class="small"><b>Concepts still working on:</b> ${c.concepts?esc(c.concepts).slice(0,150):'—'}<br><br><b>Key words:</b> ${c.keywords?esc(c.keywords).slice(0,150):'—'}<br><br><b>General takeaways:</b> ${c.takeaways?esc(c.takeaways).slice(0,150):'—'}<br><br><b>To ask professor:</b> ${c.questions?esc(c.questions).slice(0,150):'—'}<br><br><b>Assignments:</b> ${c.assignments?esc(c.assignments).slice(0,150):'—'}</div></div>`}).join('')}</div>`;
+ const entries=[...state.noteEntries].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ const courseOpts=Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('');
+ return `<div class="panel-title">Notes</div>
+ <div class="panel-sub">This is now a full note-taking workspace. Write complete notes here; the synopsis is optional and separate.</div>
+ <div class="card" style="--tone:${C.notes}">
+   <h3>Add a Note</h3>
+   <div class="inline3">
+     <div class="field"><label>Title</label><input id="note-title" type="text" placeholder="Example: Python loops — class notes"></div>
+     <div class="field"><label>Date</label><input id="note-date" type="date"></div>
+     <div class="field"><label>Course / Program</label><select id="note-course">${courseOpts}<option value="general">General</option></select></div>
+   </div>
+   <div class="field"><label>Full Notes</label><textarea id="note-body" rows="10" placeholder="Write your complete notes here..."></textarea></div>
+   <div class="field"><label>Optional Synopsis / Quick Summary</label><textarea id="note-synopsis" rows="3" placeholder="Short summary if you want one..."></textarea></div>
+   <button class="btn" onclick="addNoteEntry()">Save note</button>
+ </div>
+ <div class="card"><h3>Notes Index</h3>
+   ${entries.length?entries.map(n=>`<div class="note-entry-card">
+      <div class="inline3">
+        <div class="field"><label>Title</label><input type="text" value="${esc(n.title)}" onchange="editNoteEntry(${n.id},'title',this.value)"></div>
+        <div class="field"><label>Date</label><input type="date" value="${esc(n.date||'')}" onchange="editNoteEntry(${n.id},'date',this.value)"></div>
+        <div class="field"><label>Course / Program</label><select onchange="editNoteEntry(${n.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${n.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${n.course==='general'?'selected':''}>General</option></select></div>
+      </div>
+      <div class="field"><label>Full Notes</label><textarea rows="8" onchange="editNoteEntry(${n.id},'body',this.value)">${esc(n.body||'')}</textarea></div>
+      <div class="field"><label>Synopsis</label><textarea rows="3" onchange="editNoteEntry(${n.id},'synopsis',this.value)">${esc(n.synopsis||'')}</textarea></div>
+      <div class="btnrow"><button class="btn ghost" onclick="deleteNoteEntry(${n.id})">Delete note</button></div>
+   </div>`).join(''):'<div class="small">No saved notes yet.</div>'}
+ </div>`;
 }
 
 
@@ -1139,7 +1259,7 @@ function addMicButtons(){
 
 function render(){
  const b=document.getElementById('board');
- b.innerHTML=state.tab==='home'?home():state.tab==='schedule'?schedule():state.tab==='courses'?courses():state.tab==='todo'?todo():state.tab==='learning'?learning():state.tab==='funding'?funding():state.tab==='reminders'?reminders():fullNotesWorkspace();
+ b.innerHTML=state.tab==='home'?home():state.tab==='schedule'?schedule():state.tab==='courses'?courses():state.tab==='todo'?todo():state.tab==='learning'?learning():state.tab==='funding'?funding():state.tab==='reminders'?reminders():notes();
  setTimeout(()=>{addMicButtons(); if(state.tab==='learning')loadLearningFiles(state.learnSub)},0);
 }
 renderTabs();render();
