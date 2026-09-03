@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 14</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 15</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -261,6 +261,27 @@ img,svg,canvas{max-width:100%;height:auto}
   }
 }
 
+
+/* Draft 15 Notes workspace */
+.note-entry{border:1px solid var(--line);border-left:5px solid #7A4EA3;border-radius:9px;padding:11px;margin:10px 0;background:#fffdf8}
+.note-entry-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.note-entry-title{font-weight:700;font-size:15px}
+.note-entry-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.note-body{white-space:pre-wrap;font-size:13px;line-height:1.5;margin-top:8px}
+.note-synopsis{margin-top:9px;padding:8px;border-radius:6px;background:#f3edf7;font-size:12px}
+.notes-list{display:grid;gap:10px}
+@media(max-width:700px){
+  /* Strong phone-specific shell so the difference is obvious */
+  body{font-size:15px!important}
+  .wrap,.shell,.notebook,.paper{width:100%!important;max-width:100%!important;margin:0!important}
+  .panel{padding:12px!important}
+  .header,.masthead{padding-left:12px!important;padding-right:12px!important}
+  .note-entry-head{display:block}
+  .note-entry{padding:12px!important}
+  .notes-list{display:block}
+  .planner-shell>*{width:100%!important}
+}
+
 </style>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -273,7 +294,7 @@ img,svg,canvas{max-width:100%;height:auto}
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 14 · fully responsive phone + desktop planner</footer>
+<footer>Draft 15 · responsive phone planner + full editable Notes workspace</footer>
 </div>
 
 <script>
@@ -300,6 +321,7 @@ state.programDates.smc_cs4=Object.assign({start:'2026-09-21',end:'2026-12-11'},s
 state.programDates.smc_py=Object.assign({start:'2026-09-21',end:'2026-12-11'},state.programDates.smc_py||{});
 state.programDates.smc_cs3=Object.assign({start:'2026-10-26',end:'2026-12-18'},state.programDates.smc_cs3||{});
 state.calendarEvents=state.calendarEvents||[];
+state.fullNotes=state.fullNotes||[];
 for(const [id,s] of Object.entries(COURSE_SEED)){
  if(!state.courses[id])state.courses[id]={};
  state.courses[id]=Object.assign({prof:s.prof||'',email:'',officeHours:'',officeLocation:'',labHours:'',labLocation:'',tutoring:'',canvas:'',syllabus:'',concepts:'',keywords:'',takeaways:'',questions:'',assignments:'',notes:''},state.courses[id]);
@@ -671,6 +693,47 @@ function runningTodoPanel(){
    </div>`).join(''):`<div class="small">No open tasks right now.</div>`}
    <div class="btnrow"><button class="btn" onclick="goTab('todo')">Open full To Do list</button></div>
  </aside>`;
+}
+
+
+function addFullNote(){
+ const title=(document.getElementById('fn-title')||{}).value?.trim();
+ const date=(document.getElementById('fn-date')||{}).value||ymdLocal(new Date());
+ const course=(document.getElementById('fn-course')||{}).value||'general';
+ const body=(document.getElementById('fn-body')||{}).value?.trim()||'';
+ const synopsis=(document.getElementById('fn-synopsis')||{}).value?.trim()||'';
+ if(!title && !body)return alert('Add a note title or note text.');
+ state.fullNotes.unshift({id:Date.now(),title:title||'Untitled note',date,course,body,synopsis});
+ save();render();
+}
+function editFullNote(id,key,val){const n=state.fullNotes.find(x=>x.id==id);if(n){n[key]=val;save();render()}}
+function deleteFullNote(id){state.fullNotes=state.fullNotes.filter(x=>x.id!=id);save();render()}
+function fullNotesWorkspace(){
+ const notes=[...state.fullNotes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ return `<div class="panel-title">Notes Index</div>
+ <div class="panel-sub">This is now a full note-taking workspace. The <b>Full Notes</b> field is for everything you want to capture; Synopsis is optional and separate.</div>
+ <div class="card" style="--tone:#7A4EA3">
+   <h3>New Note</h3>
+   <div class="inline3">
+    <div class="field"><label>Note Title</label><input id="fn-title" placeholder="e.g. Python loops — Sept 3 study"></div>
+    <div class="field"><label>Date</label><input id="fn-date" type="date" value="${ymdLocal(new Date())}"></div>
+    <div class="field"><label>Course / Program</label><select id="fn-course">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+   </div>
+   <div class="field"><label>Full Notes</label><textarea id="fn-body" rows="10" placeholder="Write all of your class, study, meeting, or learning notes here..."></textarea></div>
+   <div class="field"><label>Synopsis / Quick Summary (optional)</label><textarea id="fn-synopsis" rows="3" placeholder="Short summary for quick reference..."></textarea></div>
+   <button class="btn" onclick="addFullNote()">Save note</button>
+ </div>
+ <div class="card"><h3>Saved Notes</h3>
+ ${notes.length?`<div class="notes-list">${notes.map(n=>`<div class="note-entry" style="border-left-color:${taskColor(n.course)}">
+   <div class="note-entry-head"><div><div class="note-entry-title">${esc(n.title)}</div><div class="note-entry-meta">${esc(n.date||'No date')} · ${esc((COURSE_SEED[n.course]||{}).title||'General')}</div></div>
+   <button class="btn ghost" onclick="deleteFullNote(${n.id})">Delete</button></div>
+   <div class="field"><label>Title</label><input value="${esc(n.title)}" onchange="editFullNote(${n.id},'title',this.value)"></div>
+   <div class="inline2"><div class="field"><label>Date</label><input type="date" value="${esc(n.date||'')}" onchange="editFullNote(${n.id},'date',this.value)"></div>
+   <div class="field"><label>Course</label><select onchange="editFullNote(${n.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${n.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${n.course==='general'?'selected':''}>General</option></select></div></div>
+   <div class="field"><label>Full Notes</label><textarea rows="8" onchange="editFullNote(${n.id},'body',this.value)">${esc(n.body||'')}</textarea></div>
+   <div class="field"><label>Synopsis / Quick Summary</label><textarea rows="3" onchange="editFullNote(${n.id},'synopsis',this.value)">${esc(n.synopsis||'')}</textarea></div>
+ </div>`).join('')}</div>`:'<div class="small">No saved notes yet. Your first note will appear here.</div>'}
+ </div>`;
 }
 
 function home(){
@@ -1076,7 +1139,7 @@ function addMicButtons(){
 
 function render(){
  const b=document.getElementById('board');
- b.innerHTML=state.tab==='home'?home():state.tab==='schedule'?schedule():state.tab==='courses'?courses():state.tab==='todo'?todo():state.tab==='learning'?learning():state.tab==='funding'?funding():state.tab==='reminders'?reminders():notes();
+ b.innerHTML=state.tab==='home'?home():state.tab==='schedule'?schedule():state.tab==='courses'?courses():state.tab==='todo'?todo():state.tab==='learning'?learning():state.tab==='funding'?funding():state.tab==='reminders'?reminders():fullNotesWorkspace();
  setTimeout(()=>{addMicButtons(); if(state.tab==='learning')loadLearningFiles(state.learnSub)},0);
 }
 renderTabs();render();
