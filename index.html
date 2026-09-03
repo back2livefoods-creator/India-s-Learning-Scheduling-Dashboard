@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>India's Fall 2026 Master Learning Dashboard — Draft 16</title>
+<title>India's Fall 2026 Master Learning Dashboard — Draft 17</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
@@ -413,7 +413,7 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 <div class="wrap">
 <div class="masthead"><div class="kicker">Fall 2026 · Master Education Planner</div><h1>India's Learning Dashboard</h1><div class="sub">SMC · CodePath · Per Scholas · monthly calendar · learning labs · funding</div></div>
 <div class="tabs" id="tabs"></div><div class="board" id="board"></div>
-<footer>Draft 16 · final mobile fit + full editable notes</footer>
+<footer>Draft 17 · timed To Dos + reminders + mobile fit</footer>
 </div>
 
 <script>
@@ -520,7 +520,18 @@ function taskColor(course){
  return colors[course]||'#A6373B';
 }
 function taskLabel(t){return `${t.done?'✓ ':''}${t.title}`}
-function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
+function dueTasks(ymd){return state.todos.filter(t=>t.due===ymd).map(t=>({t:t.time?clockLabel(t.time):'DUE',n:taskLabel(t),c:t.done?'#6E6255':taskColor(t.course)}))}
+function clockLabel(v){if(!v)return '';const [h,m]=v.split(':').map(Number),ap=h>=12?'PM':'AM',hh=(h%12)||12;return `${hh}:${String(m).padStart(2,'0')} ${ap}`}
+function todoICS(t){
+ if(!t||!t.due)return alert('Add a due date first.');
+ const e={title:'To Do: '+t.title,date:t.due,time:t.time||'09:00',reminder:t.reminder||'none',notes:'Dashboard To Do · '+(t.priority||'Medium')+' priority'};
+ downloadICS(e);
+}
+function reminderICS(r){
+ if(!r||!r.date)return alert('Add a date first.');
+ const e={title:'Reminder: '+r.title,date:r.date,time:r.time||'09:00',reminder:r.alert||'none',notes:'Dashboard reminder'};
+ downloadICS(e);
+}
 
 
 function addCalendarEvent(){
@@ -649,8 +660,8 @@ function visualScheduleForDate(d){
    const start=parseClockToMinutes(e.time);
    ev.push(start==null?{allDay:true,title:e.title,color:taskColor(e.category)}:{start,end:Math.min(1170,start+60),title:e.title,color:taskColor(e.category)});
  });
- state.todos.filter(t=>t.due===ymd).forEach(t=>ev.push({allDay:true,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}));
- state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>ev.push({allDay:true,title:'Reminder: '+r.title,color:'#A6373B'}));
+ state.todos.filter(t=>t.due===ymd).forEach(t=>{const s=parseClockToMinutes(t.time);ev.push(s==null?{allDay:true,title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)}:{start:s,end:Math.min(1170,s+30),title:'To Do: '+taskLabel(t),color:t.done?'#6E6255':taskColor(t.course)})});
+ state.reminders.filter(r=>r.date===ymd&&!r.done).forEach(r=>{const s=parseClockToMinutes(r.time);ev.push(s==null?{allDay:true,title:'Reminder: '+r.title,color:'#A6373B'}:{start:s,end:Math.min(1170,s+30),title:'Reminder: '+r.title,color:'#A6373B'})});
  return ev;
 }
 function renderMiniTimeline(d){
@@ -1025,29 +1036,32 @@ function courseCard(id){
 function courses(){return `<div class="panel-title">Courses & Program Notes</div><div class="panel-sub">Each institution/class now has editable support information plus dedicated learning-note categories.</div><div class="grid2">${Object.keys(COURSE_SEED).map(courseCard).join('')}</div>`}
 
 function addTodo(){
- const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
+ const title=document.getElementById('tdtitle').value.trim(),due=document.getElementById('tddue').value,time=document.getElementById('tdtime').value,reminder=document.getElementById('tdreminder').value,course=document.getElementById('tdcourse').value,priority=document.getElementById('tdpriority').value;
  if(!title)return alert('Enter a task.');
- state.todos.push({id:Date.now(),title,due,course,priority,done:false});save();render();
+ state.todos.push({id:Date.now(),title,due,time,reminder,course,priority,done:false});save();render();
 }
 function toggleTodo(id){let x=state.todos.find(t=>t.id==id);if(x)x.done=!x.done;save();render()}
 function delTodo(id){state.todos=state.todos.filter(t=>t.id!=id);save();render()}
 function editTodo(id,key,val){let x=state.todos.find(t=>t.id==id);if(x){x[key]=val;save();render()}}
 function todo(){
- const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999')));
- return `<div class="panel-title">To-Do List</div><div class="panel-sub">Working tasks for assignments, study actions, applications, interviews, and follow-ups. <b>Give a task a due date and it automatically appears on both calendar views.</b></div>
- <div class="alert green"><b>Automatic calendar sync is on</b>Add or edit a due date here → the task appears on that calendar date. Change the date → it moves. Delete the task → it disappears. Everything remains local to this browser/device.</div>
- <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3><div class="inline2"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div></div>
- <div class="inline2"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
- <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div><button class="btn" onclick="addTodo()">Add task</button></div>
+ const rows=[...state.todos].sort((a,b)=>(a.done-b.done)||((a.due||'9999').localeCompare(b.due||'9999'))||((a.time||'99:99').localeCompare(b.time||'99:99')));
+ return `<div class="panel-title">To-Do List</div><div class="panel-sub">Tasks can now have a due date, exact time, and phone reminder. A dated task appears automatically on the dashboard calendar; a timed task appears at that time.</div>
+ <div class="alert green"><b>Time + reminder support is on</b>Choose a time and reminder. For an actual iPhone notification while the dashboard is closed, tap <b>Add reminder to iPhone Calendar</b> and import the .ics event into Apple Calendar.</div>
+ <div class="card" style="--tone:${C.deadline}"><h3>Add Task</h3>
+ <div class="inline3"><div class="field"><label>Task</label><input id="tdtitle"></div><div class="field"><label>Due Date → Calendar</label><input id="tddue" type="date"></div><div class="field"><label>Time</label><input id="tdtime" type="time"></div></div>
+ <div class="inline3"><div class="field"><label>Class / Institution</label><select id="tdcourse">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title} — ${s.program}</option>`).join('')}<option value="general">General</option></select></div>
+ <div class="field"><label>Priority</label><select id="tdpriority"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+ <div class="field"><label>Phone Reminder</label><select id="tdreminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div></div>
+ <button class="btn" onclick="addTodo()">Add task</button></div>
  <div class="card"><h3>Tasks</h3>${rows.length?rows.map(t=>`<div class="todo ${t.done?'done':''}" style="align-items:flex-start"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo(${t.id})"><div style="flex:1">
    <div class="field" style="margin-top:0"><label>Task</label><input value="${esc(t.title)}" onchange="editTodo(${t.id},'title',this.value)"></div>
-   <div class="inline3">
-     <div class="field"><label>Due Date → Calendar</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
-     <div class="field"><label>Class / Institution</label><select onchange="editTodo(${t.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${t.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${t.course==='general'?'selected':''}>General</option></select></div>
-     <div class="field"><label>Priority</label><select onchange="editTodo(${t.id},'priority',this.value)"><option ${t.priority==='High'?'selected':''}>High</option><option ${t.priority==='Medium'?'selected':''}>Medium</option><option ${t.priority==='Low'?'selected':''}>Low</option></select></div>
-   </div>
-   <div class="todo-meta">${t.due?'Calendar: '+t.due:'No calendar date yet'} · ${t.done?'Completed':'Open'}</div>
-   <div class="todo-actions"><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div>
+   <div class="inline3"><div class="field"><label>Due Date</label><input type="date" value="${esc(t.due||'')}" onchange="editTodo(${t.id},'due',this.value)"></div>
+   <div class="field"><label>Time</label><input type="time" value="${esc(t.time||'')}" onchange="editTodo(${t.id},'time',this.value)"></div>
+   <div class="field"><label>Phone Reminder</label><select onchange="editTodo(${t.id},'reminder',this.value)"><option value="none" ${(t.reminder||'none')==='none'?'selected':''}>None</option><option value="m10" ${t.reminder==='m10'?'selected':''}>10 min before</option><option value="m30" ${t.reminder==='m30'?'selected':''}>30 min before</option><option value="h1" ${t.reminder==='h1'?'selected':''}>1 hour before</option><option value="d1" ${t.reminder==='d1'?'selected':''}>1 day before</option></select></div></div>
+   <div class="inline2"><div class="field"><label>Class / Institution</label><select onchange="editTodo(${t.id},'course',this.value)">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}" ${t.course===id?'selected':''}>${s.title}</option>`).join('')}<option value="general" ${t.course==='general'?'selected':''}>General</option></select></div>
+   <div class="field"><label>Priority</label><select onchange="editTodo(${t.id},'priority',this.value)"><option ${t.priority==='High'?'selected':''}>High</option><option ${t.priority==='Medium'?'selected':''}>Medium</option><option ${t.priority==='Low'?'selected':''}>Low</option></select></div></div>
+   <div class="todo-meta">${t.due?'Calendar: '+t.due:''}${t.time?' · '+clockLabel(t.time):''} · ${t.done?'Completed':'Open'}</div>
+   <div class="todo-actions"><button class="btn ghost" onclick="todoICS(state.todos.find(x=>x.id==${t.id}))">Add reminder to iPhone Calendar</button><button class="btn ghost" onclick="delTodo(${t.id})">Delete</button></div>
  </div></div>`).join(''):'<div class="small">No tasks yet.</div>'}</div>`;
 }
 
@@ -1130,16 +1144,20 @@ function funding(){
 }
 
 function addReminder(){
- const title=document.getElementById('rtitle').value.trim(),date=document.getElementById('rdate').value;if(!title||!date)return alert('Enter title and date.');
- state.reminders.push({id:Date.now(),title,date,done:false});save();render();
+ const title=document.getElementById('rtitle').value.trim(),date=document.getElementById('rdate').value,time=document.getElementById('rtime').value,alert=document.getElementById('ralert').value;
+ if(!title||!date)return alert('Enter title and date.');
+ state.reminders.push({id:Date.now(),title,date,time,alert,done:false});save();render();
 }
+function editReminder(id,key,val){let x=state.reminders.find(r=>r.id==id);if(x){x[key]=val;save();render()}}
 function toggleReminder(id){let x=state.reminders.find(r=>r.id==id);if(x)x.done=!x.done;save();render()}
 function delReminder(id){state.reminders=state.reminders.filter(r=>r.id!=id);save();render()}
 function reminders(){
- return `<div class="panel-title">Reminder Center</div><div class="panel-sub">Dashboard reminders appear here and on the monthly calendar. They are local to this file, not background ChatGPT alerts.</div>
- <div class="card"><div class="inline2"><div class="field"><label>Reminder</label><input id="rtitle"></div><div class="field"><label>Date</label><input id="rdate" type="date"></div></div><button class="btn" onclick="addReminder()">Add reminder</button></div>
- <div class="card">${state.reminders.length?state.reminders.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`<div class="todo ${r.done?'done':''}"><input type="checkbox" ${r.done?'checked':''} onchange="toggleReminder(${r.id})"><div><div class="todo-title">${esc(r.title)}</div><div class="todo-meta">${r.date}</div><div class="todo-actions"><button class="btn ghost" onclick="delReminder(${r.id})">Delete</button></div></div></div>`).join(''):'<div class="small">No reminders yet.</div>'}</div>
- <div class="alert green"><b>Actual ChatGPT reminders</b>If you want a true notification at a future time, tell me which item and when; I can create that separately in ChatGPT.</div>`;
+ return `<div class="panel-title">Reminder Center</div><div class="panel-sub">Reminders can now have an exact time. They appear on the dashboard calendar at that time.</div>
+ <div class="card"><div class="inline3"><div class="field"><label>Reminder</label><input id="rtitle"></div><div class="field"><label>Date</label><input id="rdate" type="date"></div><div class="field"><label>Time</label><input id="rtime" type="time"></div></div>
+ <div class="field"><label>Phone Alert</label><select id="ralert"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div>
+ <button class="btn" onclick="addReminder()">Add reminder</button></div>
+ <div class="card">${state.reminders.length?state.reminders.sort((a,b)=>(a.date||'').localeCompare(b.date||'')||(a.time||'99:99').localeCompare(b.time||'99:99')).map(r=>`<div class="todo ${r.done?'done':''}"><input type="checkbox" ${r.done?'checked':''} onchange="toggleReminder(${r.id})"><div style="flex:1"><div class="field" style="margin-top:0"><label>Reminder</label><input value="${esc(r.title)}" onchange="editReminder(${r.id},'title',this.value)"></div><div class="inline3"><div class="field"><label>Date</label><input type="date" value="${esc(r.date||'')}" onchange="editReminder(${r.id},'date',this.value)"></div><div class="field"><label>Time</label><input type="time" value="${esc(r.time||'')}" onchange="editReminder(${r.id},'time',this.value)"></div><div class="field"><label>Phone Alert</label><select onchange="editReminder(${r.id},'alert',this.value)"><option value="none" ${(r.alert||'none')==='none'?'selected':''}>None</option><option value="m10" ${r.alert==='m10'?'selected':''}>10 min before</option><option value="m30" ${r.alert==='m30'?'selected':''}>30 min before</option><option value="h1" ${r.alert==='h1'?'selected':''}>1 hour before</option><option value="d1" ${r.alert==='d1'?'selected':''}>1 day before</option></select></div></div><div class="todo-meta">${r.date}${r.time?' · '+clockLabel(r.time):''}</div><div class="todo-actions"><button class="btn ghost" onclick="reminderICS(state.reminders.find(x=>x.id==${r.id}))">Add to iPhone Calendar</button><button class="btn ghost" onclick="delReminder(${r.id})">Delete</button></div></div></div>`).join(''):'<div class="small">No reminders yet.</div>'}</div>
+ <div class="alert green"><b>For actual phone notifications</b>The dashboard remains local-only. Choose a phone alert and use “Add to iPhone Calendar”; Apple Calendar will deliver the notification even when the dashboard is closed.</div>`;
 }
 
 function addNoteEntry(){

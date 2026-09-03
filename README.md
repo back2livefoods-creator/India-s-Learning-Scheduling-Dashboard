@@ -1,3 +1,3 @@
 # India's Learning & Master Schedule Dashboard
 
-Draft 16: final mobile-fit pass. The compact monthly planner now keeps all seven days visible on iPhone, schedule-view controls stack cleanly without clipping, and the detailed time-gap calendar remains horizontally scrollable within its own frame. Full editable Notes remain included.
+Draft 17 adds exact times and phone-reminder options to To Dos and the Reminder Center while preserving Draft 16's responsive mobile layout and editable Notes.
