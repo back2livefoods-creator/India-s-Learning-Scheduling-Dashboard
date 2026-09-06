@@ -448,6 +448,9 @@ state.programDates.smc_cs3=Object.assign({start:'2026-10-26',end:'2026-12-18'},s
 state.calendarEvents=state.calendarEvents||[];
 state.noteEntries=state.noteEntries||[];
 state.plannerNotes=state.plannerNotes||'';
+if(!state.calendarEvents.some(e=>e.date==='2026-09-18' && /Per Scholas.*Interview|Interview.*Per Scholas/i.test(e.title||''))){
+ state.calendarEvents.push({id:Date.now()+18,title:'Per Scholas Los Angeles Interview',date:'2026-09-18',time:'11:00',endTime:'11:45',category:'ps',type:'Interview',reminder:'h1',notes:'Zoom interview with Hannah Guo · Pacific Time',done:false});
+}
 for(const [id,s] of Object.entries(COURSE_SEED)){
  if(!state.courses[id])state.courses[id]={};
  state.courses[id]=Object.assign({prof:s.prof||'',email:'',officeHours:'',officeLocation:'',labHours:'',labLocation:'',tutoring:'',canvas:'',syllabus:'',concepts:'',keywords:'',takeaways:'',questions:'',assignments:'',notes:''},state.courses[id]);
@@ -506,6 +509,7 @@ function esc(v=''){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').r
 const TABS=[['home','This Week',C.study],['schedule','MY MASTER SCHEDULE',C.smc],['courses','Courses',C.smc],['todo','To Do',C.deadline],['learning','Interactive Learning',C.codepath],['funding','Funding',C.fund],['reminders','Reminders',C.deadline],['notes','Notes',C.notes]];
 function renderTabs(){tabs.innerHTML=TABS.map(t=>`<button class="tab ${state.tab===t[0]?'active':''}" onclick="setTab('${t[0]}')"><span class="dot" style="background:${t[2]}"></span>${t[1]}</button>`).join('')}
 function setTab(x){state.tab=x;save();renderTabs();render()}
+function goTab(x){setTab(x);window.scrollTo({top:0,behavior:'smooth'})}
 function subtabs(items,current,setter){return `<div class="subtabs schedule-switcher">${items.map(x=>`<button class="subtab ${current===x[0]?'active':''}" onclick="${setter}('${x[0]}')">${x[1]}</button>`).join('')}</div>`}
 
 
@@ -582,6 +586,7 @@ function addMonthlyBlock(){
     state.todos.push({id:Date.now()+1,title,due:date,endDate:'',time:start,endTime:end,repeat:'none',reminder:'none',course:category,priority:'Medium',done:false});
   }
   save();render();
+  setTimeout(()=>alert('Added to the Monthly Calendar.'),0);
 }
 
 function todoICS(t){
@@ -600,18 +605,21 @@ function addCalendarEvent(){
  const title=(document.getElementById('ce-title')||{}).value?.trim();
  const date=(document.getElementById('ce-date')||{}).value;
  const time=(document.getElementById('ce-time')||{}).value||'';
+ const endTime=(document.getElementById('ce-end-time')||{}).value||'';
  const category=(document.getElementById('ce-category')||{}).value||'general';
  const type=(document.getElementById('ce-type')||{}).value||'Appointment';
  const reminder=(document.getElementById('ce-reminder')||{}).value||'none';
  const notes=(document.getElementById('ce-notes')||{}).value?.trim()||'';
  const makeTodo=(document.getElementById('ce-todo')||{}).checked;
  if(!title||!date)return alert('Enter a title and date.');
+ if(time&&endTime&&parseClockToMinutes(endTime)<=parseClockToMinutes(time))return alert('End time must be after start time.');
  const id=Date.now();
- state.calendarEvents.push({id,title,date,time,category,type,reminder,notes,done:false});
+ state.calendarEvents.push({id,title,date,time,endTime,category,type,reminder,notes,done:false});
  if(makeTodo){
-   state.todos.push({id:id+1,title,due:date,course:category,priority:'Medium',done:false,calendarEventId:id});
+   state.todos.push({id:id+1,title,due:date,endDate:'',time,endTime,repeat:'none',course:category,priority:'Medium',done:false,calendarEventId:id});
  }
  save();render();
+ setTimeout(()=>alert('Added to the dashboard calendar.'),0);
 }
 function deleteCalendarEvent(id){
  state.calendarEvents=state.calendarEvents.filter(e=>e.id!=id);
@@ -931,11 +939,14 @@ function weekly(){
    <div class="inline3">
      <div class="field"><label>Title</label><input id="ce-title"></div>
      <div class="field"><label>Date</label><input id="ce-date" type="date"></div>
-     <div class="field"><label>Time</label><input id="ce-time" type="time"></div>
+     <div class="field"><label>Start Time</label><input id="ce-time" type="time"></div>
    </div>
    <div class="inline3">
+     <div class="field"><label>End Time</label><input id="ce-end-time" type="time"></div>
      <div class="field"><label>Type</label><select id="ce-type"><option>Appointment</option><option>Task</option><option>Assignment</option><option>Class</option><option>Study</option><option>Personal</option></select></div>
      <div class="field"><label>Category</label><select id="ce-category">${Object.entries(COURSE_SEED).map(([id,s])=>`<option value="${id}">${s.title}</option>`).join('')}<option value="general">General</option></select></div>
+   </div>
+   <div class="inline2">
      <div class="field"><label>Phone Reminder</label><select id="ce-reminder"><option value="none">None</option><option value="m10">10 minutes before</option><option value="m30">30 minutes before</option><option value="h1">1 hour before</option><option value="d1">1 day before</option></select></div>
    </div>
    <div class="field"><label>Notes</label><textarea id="ce-notes" rows="2"></textarea></div>
@@ -945,7 +956,8 @@ function weekly(){
  </div>
 
  ${state.calendarEvents.length?`<div class="card"><h3>My Direct Calendar Items</h3>${[...state.calendarEvents].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)).map(e=>`<div class="cal-item-row">
- <div class="inline3"><div class="field"><label>Title</label><input value="${esc(e.title)}" onchange="editCalendarEvent(${e.id},'title',this.value)"></div><div class="field"><label>Date</label><input type="date" value="${e.date}" onchange="editCalendarEvent(${e.id},'date',this.value)"></div><div class="field"><label>Time</label><input type="time" value="${e.time||''}" onchange="editCalendarEvent(${e.id},'time',this.value)"></div></div>
+ <div class="inline3"><div class="field"><label>Title</label><input value="${esc(e.title)}" onchange="editCalendarEvent(${e.id},'title',this.value)"></div><div class="field"><label>Date</label><input type="date" value="${e.date}" onchange="editCalendarEvent(${e.id},'date',this.value)"></div><div class="field"><label>Start Time</label><input type="time" value="${e.time||''}" onchange="editCalendarEvent(${e.id},'time',this.value)"></div></div>
+ <div class="inline2"><div class="field"><label>End Time</label><input type="time" value="${e.endTime||''}" onchange="editCalendarEvent(${e.id},'endTime',this.value)"></div></div>
  <div class="small">${e.type} · ${e.category} · Reminder: ${e.reminder}</div>
  <div class="btnrow"><button class="btn ghost" onclick="toggleCalendarEvent(${e.id})">${e.done?'Mark open':'Mark complete'}</button><button class="btn ghost" onclick="downloadICS(state.calendarEvents.find(x=>x.id==${e.id}))">Add to iPhone Calendar</button><button class="btn ghost" onclick="deleteCalendarEvent(${e.id})">Delete</button></div>
  </div>`).join('')}</div>`:''}
