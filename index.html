@@ -909,6 +909,22 @@ function home(){
 }
 
 function setScheduleSub(x){state.scheduleSub=x;save();render()}
+function weeklySavedItems(){
+ const items=[];
+ state.todos.forEach(t=>items.push({date:t.due||'',time:t.time||'',endTime:t.endTime||'',title:t.title||'Untitled task',kind:'To Do',done:!!t.done}));
+ state.calendarEvents.forEach(e=>{
+   if(!state.todos.some(t=>t.calendarEventId==e.id))items.push({date:e.date||'',time:e.time||'',endTime:e.endTime||'',title:e.title||'Untitled event',kind:e.type||'Calendar',done:!!e.done});
+ });
+ state.reminders.forEach(r=>items.push({date:r.date||'',time:r.time||'',endTime:'',title:r.title||'Untitled reminder',kind:'Reminder',done:!!r.done}));
+ items.sort((a,b)=>((a.date||'9999-99-99')+(a.time||'99:99')).localeCompare((b.date||'9999-99-99')+(b.time||'99:99')));
+ const dateLabel=v=>v?new Date(v+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):'Unscheduled';
+ const timeLabel=x=>x.time?(clockLabel(x.time)+(x.endTime?'–'+clockLabel(x.endTime):'')):'No time';
+ return `<div class="card" style="--tone:${C.deadline}">
+   <h3>My Saved Weekly Schedule Items</h3>
+   <div class="small" style="margin-bottom:10px">Every task, direct calendar item, and reminder you add appears here automatically with its saved date and time.</div>
+   ${items.length?`<div style="overflow-x:auto"><table><thead><tr><th>Day / Date</th><th>Time</th><th>Item</th><th>Type</th></tr></thead><tbody>${items.map(x=>`<tr style="${x.done?'opacity:.55':''}"><td><b>${dateLabel(x.date)}</b></td><td>${timeLabel(x)}</td><td>${x.done?'✓ ':''}${esc(x.title)}</td><td>${esc(x.kind)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="small">No saved tasks, events, or reminders yet.</div>'}
+ </div>`;
+}
 function schedule(){
  const subs=subtabs([['weekly','Daily / Weekly Master Schedule'],['monthly','Monthly Schedule'],['synopsis','Calendar Synopsis']],state.scheduleSub,'setScheduleSub');
  return `<div class="schedule-with-todos">
@@ -961,6 +977,8 @@ function weekly(){
  <div class="small">${e.type} · ${e.category} · Reminder: ${e.reminder}</div>
  <div class="btnrow"><button class="btn ghost" onclick="toggleCalendarEvent(${e.id})">${e.done?'Mark open':'Mark complete'}</button><button class="btn ghost" onclick="downloadICS(state.calendarEvents.find(x=>x.id==${e.id}))">Add to iPhone Calendar</button><button class="btn ghost" onclick="deleteCalendarEvent(${e.id})">Delete</button></div>
  </div>`).join('')}</div>`:''}
+
+ ${weeklySavedItems()}
 
  <div class="alert green"><b>Sleep + recovery anchor</b>Bedtime is 7:00–7:30 PM. Wake time is 12:00 AM. Sunday is a complete day off — no studying, no catch-up, no negotiations.</div>
  <div class="card" style="--tone:${C.study}">
